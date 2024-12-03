@@ -5,3 +5,147 @@
 #include <string>
 #include <vector>
 
+//当前光标的位置
+int x=0;
+int y=0;
+
+//文本内容
+std::vector<std::string> text;
+std::string copied_line;
+
+void insert_mode();
+void command_mode();
+void save_file();
+void load_file();
+void move_cursor(int dx, int dy);
+
+int main(){
+    initscr();   //开启
+    raw();   //直接传送给程序去处理而不产生终端信号
+    keypad(stdscr,TRUE);  //允许使用功能键
+    noecho();   //在进行控制操作时不显示输入的控制字符
+    curs_set(0);    //设置光标不可见
+
+    //加载文件内容
+    load_file();
+
+    int ch;
+    bool delete_mode=false;
+    while (1){
+        clear();
+
+        //显示当前文本内容
+        for (int i = 0; i < text.size(); i++)
+        {
+            mvprintw(i,0,"%s",text[i].c_str());
+        }
+        
+        //显示当前光标的内容
+        move(y,x);
+        refresh();
+
+        ch=getch();  //读取键盘内容
+        switch(ch){
+            //退出程序
+            case 'q':
+                endwin();
+                break;
+            //进入insert模式
+            case 'i':
+                insert_mode();
+                break;
+            //进入命令模式
+            case ':':
+                command_mode();
+                break;
+            //光标左移
+            case 'h':
+                move_cursor(-1,0);
+                break;
+            //光标下移
+            case 'j':
+                move_cursor(0,1);
+                break;
+            //光标上移
+            case 'k':
+                move_cursor(0,-1);
+                break;
+            //光标右移
+            case 'l':
+                move_cursor(1,0);
+                break;
+            case KEY_LEFT: 
+                move_cursor(-1, 0);
+                break;
+            case KEY_RIGHT:  
+                move_cursor(1, 0);
+                break;
+            case KEY_UP:  
+                move_cursor(0, -1);
+                break;
+            case KEY_DOWN:  
+                move_cursor(0, 1);
+                break;
+            //跳转到行首
+            case '0':
+                x=0;
+                break;
+            //跳转到行尾
+            case '$':
+                while (x<text[y].length()){
+                    x++;
+                }
+                break;
+            //跳转到第一行
+            case 'g':
+                if (getch()=='g'){
+                    y=0;
+                    x=0;
+                }
+                break;
+            //跳转到最后一行
+            case 'G':
+                y = text.size() - 1;
+                x = 0;
+                break;
+            //删除当前行
+            case 'd':
+                char next = getch();
+                if (next=='d'){
+                    if (!text.empty()&&y<text.size()){
+                        text.erase(text.begin() + y);
+                        if (y==text.size()-1){
+                            y==text.size()-2;
+                        }
+                        x=0;
+                    }
+                }else{
+                    ungetch(next);    //若不是d，返回输入流
+                }
+                break;
+            //复制当前行
+            case 'y':
+                int next_ch = getch();  // 获取下一个按键
+                if (next_ch == 'y') {  // 如果下一个按键是 'y'
+                    // 复制当前行到 copied_line
+                    if (!text.empty() && y < text.size()) {
+                        copied_line = text[y];
+                    }
+                } else {
+                    ungetch(next_ch);  // 将其放回输入流
+                }
+                break;
+            //粘贴当前行
+            case 'p':
+                if (!copied_line.empty()) {
+                    text.insert(text.begin() + y + 1, copied_line);
+                    y++;
+                }
+                break;
+            default:
+                break;
+        }
+    }
+    endwin();
+    return 0;
+}
