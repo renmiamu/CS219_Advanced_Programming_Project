@@ -24,7 +24,7 @@ int main(){
     raw();   //直接传送给程序去处理而不产生终端信号
     keypad(stdscr,TRUE);  //允许使用功能键
     noecho();   //在进行控制操作时不显示输入的控制字符
-    curs_set(0);    //设置光标不可见
+    curs_set(1);    //设置光标不可见
 
     //加载文件内容
     load_file();
@@ -45,6 +45,7 @@ int main(){
         refresh();
 
         ch=getch();  //读取键盘内容
+        int next_ch;
         switch(ch){
             //进入insert模式
             case 'i':
@@ -106,8 +107,8 @@ int main(){
                 break;
             //删除当前行
             case 'd':
-                char next = getch();
-                if (next=='d'){
+                next_ch = getch();
+                if (next_ch=='d'){
                     if (!text.empty()&&y<text.size()){
                         text.erase(text.begin() + y);
                         if (y==text.size()-1){
@@ -116,12 +117,12 @@ int main(){
                         x=0;
                     }
                 }else{
-                    ungetch(next);    //若不是d，返回输入流
+                    ungetch(next_ch);    //若不是d，返回输入流
                 }
                 break;
             //复制当前行
             case 'y':
-                int next_ch = getch();  // 获取下一个按键
+                next_ch = getch();  // 获取下一个按键
                 if (next_ch == 'y') {  // 如果下一个按键是 'y'
                     // 复制当前行到 copied_line
                     if (!text.empty() && y < text.size()) {
@@ -199,5 +200,53 @@ void insert_mode(){
         }
         move(y,x);
         refresh();
+    }
+}
+
+void command_mode(){
+    char command[100];
+    echo();    //开启回显，使用户输入可见
+    getstr(command);
+    noecho();
+
+    if (strcmp(command,":w")==0){
+        save_file();
+    }else if (strcmp(command,":q")==0){
+        endwin();
+        exit(0);
+    }else if (strcmp(command,":wq")==0){
+        save_file();
+        endwin();
+        exit(0);
+    }
+    refresh();
+}
+
+void save_file(){
+    std::ofstream file("text.txt");
+    if (file.is_open()){
+        for (const auto &line : text) {
+            file << line << std::endl;  // 写入每一行
+        }
+        file.close();
+    }
+    refresh();
+}
+
+void move_cursor(int dx, int dy) {
+    x += dx;
+    y += dy;
+
+    if (x < 0){
+        x = 0;
+    }
+    if (y < 0){
+        y = 0;
+    }
+    if (y >= text.size()){
+        y = text.size() - 1;
+    } 
+    if (x > text[y].length()){
+        x = text[y].length();
     }
 }
