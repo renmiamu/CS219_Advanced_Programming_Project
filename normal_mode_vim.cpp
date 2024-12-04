@@ -5,6 +5,7 @@
 #include <string>
 #include <vector>
 
+
 //当前光标的位置
 int x=0;
 int y=0;
@@ -162,6 +163,8 @@ void load_file(){
 void insert_mode(){
     int ch;
     while (1){
+        mvprintw(0, 0, "Key pressed: %d   ", ch);
+        refresh();
         //获取按键输入
         ch=getch();
         
