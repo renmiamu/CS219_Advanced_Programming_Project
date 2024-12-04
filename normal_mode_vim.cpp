@@ -46,10 +46,6 @@ int main(){
 
         ch=getch();  //读取键盘内容
         switch(ch){
-            //退出程序
-            case 'q':
-                endwin();
-                break;
             //进入insert模式
             case 'i':
                 insert_mode();
@@ -148,4 +144,60 @@ int main(){
     }
     endwin();
     return 0;
+}
+
+
+void load_file(){
+    std::ifstream file("text.txt");
+    if (file.is_open()){
+        std::string line;
+        while(getline(file,line)){
+            text.push_back(line);
+        }
+        file.close();
+    }
+};
+
+void insert_mode(){
+    int ch;
+    while (1){
+        //获取按键输入
+        ch=getch();
+        
+        //如果按下的是ESC，则退回普通模式
+        if (ch==27){
+            return;
+        }
+
+        //按下backspace
+        if (ch==127){
+            if (x>0){
+                text[y].erase(x-1,1);
+                x--;
+            }else if (y>0){
+                x=text[y-1].length();
+                text[y-1]+=text[y];
+                text.erase(text.begin()+y);
+                y--;
+            }
+        }
+        //按下enter键
+        else if (ch=='\n'){
+            text.insert(text.begin()+y+1,text[y].substr(x));
+            text[y]=text[y].substr(0,x);
+            y++;
+            x=0;
+        }else{
+            text[y].insert(x,1,ch);
+            x++;
+        }
+
+        //实时更新文本内容
+        clear();
+        for (int i=0;i<text.size();i++){
+            mvprintw(i,0,"%s",text[i].c_str());
+        }
+        move(y,x);
+        refresh();
+    }
 }
