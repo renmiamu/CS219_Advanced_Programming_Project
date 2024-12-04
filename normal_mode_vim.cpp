@@ -24,7 +24,7 @@ int main(){
     raw();   //直接传送给程序去处理而不产生终端信号
     keypad(stdscr,TRUE);  //允许使用功能键
     noecho();   //在进行控制操作时不显示输入的控制字符
-    curs_set(1);    //设置光标不可见
+    curs_set(1);    //设置光标可见
 
     //加载文件内容
     load_file();
@@ -171,7 +171,7 @@ void insert_mode(){
         }
 
         //按下backspace
-        if (ch==127){
+        if (ch==KEY_BACKSPACE||ch==127||ch==8){
             if (x>0){
                 text[y].erase(x-1,1);
                 x--;
@@ -249,4 +249,7 @@ void move_cursor(int dx, int dy) {
     if (x > text[y].length()){
         x = text[y].length();
     }
+
+    move(y,x);
+    refresh();
 }
