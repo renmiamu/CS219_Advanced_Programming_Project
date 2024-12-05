@@ -163,9 +163,6 @@ void load_file(){
 void insert_mode(){
     int ch;
     while (1){
-        mvprintw(0, 0, "Key pressed: %d   ", ch);
-        refresh();
-        //获取按键输入
         ch=getch();
         
         //如果按下的是ESC，则退回普通模式
@@ -174,7 +171,7 @@ void insert_mode(){
         }
 
         //按下backspace
-        if (ch==KEY_BACKSPACE||ch==127||ch==8){
+        if (ch==KEY_BACKSPACE||ch==127||ch==8||ch=='^G'||ch=='\b'){
             if (x>0){
                 text[y].erase(x-1,1);
                 x--;
@@ -209,6 +206,7 @@ void insert_mode(){
 void command_mode(){
     char command[100];
     echo();    //开启回显，使用户输入可见
+    move(y,x);
     getstr(command);
     noecho();
 
