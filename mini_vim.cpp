@@ -14,6 +14,7 @@ private:
     // 文本内容
     std::vector<std::string> text;
     std::string copied_line;
+    std::string command_str;  // Stores the command entered in command mode
 
 public:
     // 构造函数
@@ -205,26 +206,68 @@ private:
         }
     }
 
-
-    // 命令模式
     void command_mode() {
-        char command[100];
-        echo();  // 开启回显，使用户输入可见
-        move(y, x);
-        getstr(command);
-        noecho();
+        int max_y, max_x;
+        getmaxyx(stdscr, max_y, max_x);  // 获取终端的大小
+        int command_line = max_y - 1;  // 保留最后一行用于输入命令
 
-        if (strcmp(command, ":w") == 0) {
-            save_file();
-        } else if (strcmp(command, ":q") == 0) {
-            endwin();
-            exit(0);
-        } else if (strcmp(command, ":wq") == 0) {
-            save_file();
-            endwin();
-            exit(0);
-        }
+        command_str = "";  // 清空之前的命令字符串
+        move(command_line, 0);  // 移动到命令行输入的位置
+
+        // 显示命令提示符
+        mvprintw(command_line, 0, ":");
         refresh();
+
+        while (true) {
+            int ch = getch();  // 获取按键输入
+            
+            // 检查是否是 ESC 退出命令模式
+            if (ch == 27) {  // ESC 键
+                clear();
+                return;  // 退出命令模式
+            }
+
+            // 处理退格键
+            if (ch == KEY_BACKSPACE || ch == 127) {
+                if (!command_str.empty()) {
+                    command_str.pop_back();  // 移除命令字符串中的最后一个字符
+                    move(command_line, 1 + command_str.length());  // 光标向后移动
+                    delch();  // 删除字符
+                }
+            }
+            // 处理字符输入（将字符追加到命令字符串中）
+            else if (ch != '\n') {  // 忽略回车键
+                command_str.push_back(ch);  // 将字符添加到命令中
+                addch(ch);  // 在屏幕上显示字符
+            }
+            // 当按下回车键时，处理命令
+            else if (ch == '\n') {
+                noecho();  // 禁用回显
+                process_command();
+                clear();  // 清空屏幕
+                return;  // 退出命令模式
+            }
+
+            refresh();  // 刷新屏幕以更新命令行
+        }
+    }
+
+
+    // Process the entered command
+    void process_command() {
+        if (command_str == "w") {
+            save_file();
+        } else if (command_str == "q") {
+            endwin();
+            exit(0);
+        } else if (command_str == "wq") {
+            save_file();
+            endwin();
+            exit(0);
+        } else {
+            mvprintw(y, x, "Unknown command: %s", command_str.c_str());
+            refresh();
+        }
     }
 
     // 保存文件
