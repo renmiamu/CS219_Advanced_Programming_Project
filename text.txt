@@ -1,5 +1,3 @@
-dfszxm 
-is the be
-fdsfksst goa
-lkeeper ever.
-however, shl is the goat.
+#include <iostream>
+
+int main(){

@@ -188,6 +188,14 @@ void insert_mode(){
             text[y]=text[y].substr(0,x);
             y++;
             x=0;
+        }else if (ch==KEY_LEFT){
+            move_cursor(-1,0);
+        }else if (ch==KEY_RIGHT){
+            move_cursor(1,0);
+        }else if (ch==KEY_UP){
+            move_cursor(0,-1);
+        }else if (ch==KEY_DOWN){
+            move_cursor(0,1);
         }else{
             text[y].insert(x,1,ch);
             x++;
