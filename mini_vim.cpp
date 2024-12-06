@@ -214,7 +214,15 @@ private:
             save_file();
             endwin();
             exit(0);
-        } else {
+        }else if(is_number(command_str)){
+            int line_number=std::stoi(command_str);
+            if (line_number>=1&&line_number<=text.size()){
+                y=line_number-1;
+                x=0;
+            }else{
+                refresh();
+            }
+        }else {
             mvprintw(y, x, "Unknown command: %s", command_str.c_str());
             refresh();
         }
@@ -272,6 +280,18 @@ private:
             mvprintw(i, line_number_width + 1, "%s", text[i].c_str());
         }
     }
+
+    //判断是否为数字
+    bool is_number(const std::string &str) {
+    if (str.empty()) return false;  // 空字符串不是数字
+
+    for (char ch : str) {
+        if (!std::isdigit(ch)) {
+            return false;  // 如果有任何非数字字符，返回 false
+        }
+    }
+    return true;
+}
 };
 
 int main() {
