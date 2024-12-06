@@ -4,6 +4,7 @@
 #include <cstring>
 #include <string>
 #include <vector>
+#include <stack>
 
 class MiniVim {
 private:
@@ -13,6 +14,10 @@ private:
     std::string copied_line;
     std::string command_str;
     std::string mode = "--NORMAL--";
+
+    // Undo/Redo Stacks
+    std::stack<std::pair<std::vector<std::string>, std::pair<int, int>>> undo_stack;  // Text + Cursor
+    std::stack<std::pair<std::vector<std::string>, std::pair<int, int>>> redo_stack;  // Text + Cursor
 
 public:
     MiniVim() {
@@ -61,6 +66,12 @@ public:
                     break;
                 case 'l':
                     move_cursor(1, 0);
+                    break;
+                case 'u':  // Undo
+                    undo();
+                    break;
+                case 'r':  // Redo
+                    redo();
                     break;
                 case KEY_LEFT:
                     move_cursor(-1, 0);
@@ -143,6 +154,8 @@ private:
             if (ch == 27) {
                 return;
             }
+            save_state_to_undo();  // Save state before editing
+
             if (ch == KEY_BACKSPACE || ch == 127) {
                 if (x > 0) {
                     text[y].erase(x - 1, 1);
@@ -158,7 +171,7 @@ private:
                 text[y] = text[y].substr(0, x);
                 y++;
                 x = 0;
-            }else if (ch==KEY_LEFT){
+            } else if (ch==KEY_LEFT){
                 move_cursor(-1,0);
             }else if (ch==KEY_RIGHT){
                 move_cursor(1,0);
@@ -222,15 +235,7 @@ private:
             save_file();
             endwin();
             exit(0);
-        }else if(is_number(command_str)){
-            int line_number=std::stoi(command_str);
-            if (line_number>=1&&line_number<=text.size()){
-                y=line_number-1;
-                x=0;
-            }else{
-                refresh();
-            }
-        }else {
+        } else {
             mvprintw(y, x, "Unknown command: %s", command_str.c_str());
             refresh();
         }
@@ -268,8 +273,6 @@ private:
         refresh();
     }
 
-
-    //让行号对齐文本内容
     int get_line_number_width() {
         int num_lines = text.size();
         int width = 1;
@@ -280,7 +283,6 @@ private:
         return width;
     }
 
-    //将行号与文本内容分开显示
     void display_text_with_line_numbers() {
         int line_number_width = get_line_number_width();
         for (int i = 0; i < text.size(); i++) {
@@ -289,18 +291,42 @@ private:
         }
     }
 
-    //判断是否为数字
-    bool is_number(const std::string &str) {
-    if (str.empty()) return false;  // 空字符串不是数字
-
-    for (char ch : str) {
-        if (!std::isdigit(ch)) {
-            return false;  // 如果有任何非数字字符，返回 false
+    void save_state_to_undo() {
+        // Save current text and cursor position to undo stack
+        undo_stack.push({text, {x, y}});
+        // Clear redo stack
+        while (!redo_stack.empty()) {
+            redo_stack.pop();
         }
     }
-    return true;
-}
+
+    void undo() {
+        if (!undo_stack.empty()) {
+            // Save current state to redo stack
+            redo_stack.push({text, {x, y}});
+            // Restore undo stack state
+            text = undo_stack.top().first;
+            x = undo_stack.top().second.first;
+            y = undo_stack.top().second.second;
+            undo_stack.pop();
+            refresh();
+        }
+    }
+
+    void redo() {
+        if (!redo_stack.empty()) {
+            // Save current state to undo stack
+            undo_stack.push({text, {x, y}});
+            // Restore redo stack state
+            text = redo_stack.top().first;
+            x = redo_stack.top().second.first;
+            y = redo_stack.top().second.second;
+            redo_stack.pop();
+            refresh();
+        }
+    }
 };
+
 
 int main() {
     MiniVim editor;
