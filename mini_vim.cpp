@@ -32,11 +32,9 @@ public:
         int ch;
         while (true) {
             clear();
-            for (int i = 0; i < text.size(); i++) {
-                mvprintw(i, 0, "%s", text[i].c_str());
-            }
+            display_text_with_line_numbers();
             display_mode();
-            move(y, x);
+            move(y, x + get_line_number_width() + 1);
             refresh();
 
             ch = getch();
@@ -139,6 +137,7 @@ private:
 
     void insert_mode() {
         int ch;
+        move(y, x + get_line_number_width() + 1);
         while (1) {
             ch = getch();
             if (ch == 27) {
@@ -164,11 +163,9 @@ private:
                 x++;
             }
             clear();
-            for (int i = 0; i < text.size(); i++) {
-                mvprintw(i, 0, "%s", text[i].c_str());
-            }
+            display_text_with_line_numbers();
             display_mode();
-            move(y, x);
+            move(y, x + get_line_number_width() + 1);
             refresh();
         }
     }
@@ -240,7 +237,7 @@ private:
         if (y < 0) y = 0;
         if (y >= text.size()) y = text.size() - 1;
         if (x > text[y].length()) x = text[y].length();
-        move(y, x);
+        move(y, x + get_line_number_width() + 1);
         refresh();
     }
 
@@ -252,8 +249,28 @@ private:
         if (show) {
             mvprintw(max_y - 1, 0, "%s", mode.c_str());
         }
-        move(y,x);
         refresh();
+    }
+
+
+    //让行号对齐文本内容
+    int get_line_number_width() {
+        int num_lines = text.size();
+        int width = 1;
+        while (num_lines >= 10) {
+            num_lines /= 10;
+            width++;
+        }
+        return width;
+    }
+
+    //将行号与文本内容分开显示
+    void display_text_with_line_numbers() {
+        int line_number_width = get_line_number_width();
+        for (int i = 0; i < text.size(); i++) {
+            mvprintw(i, 0, "%*d ", line_number_width, i + 1);
+            mvprintw(i, line_number_width + 1, "%s", text[i].c_str());
+        }
     }
 };
 
