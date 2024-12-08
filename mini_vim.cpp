@@ -26,6 +26,7 @@ public:
         keypad(stdscr, TRUE);
         noecho();
         curs_set(1);
+        init_colors();
         load_file();
     }
 
@@ -135,6 +136,18 @@ public:
     }
 
 private:
+    void init_colors() {
+        if (has_colors()) {
+            start_color();
+            init_pair(1, COLOR_WHITE, COLOR_BLACK);   // 默认颜色（白色文字，黑色背景）
+            init_pair(2, COLOR_BLACK, COLOR_WHITE);   // 反转色（黑色文字，白色背景）
+            init_pair(3, COLOR_GREEN, COLOR_BLACK);   // 插入模式绿色
+            init_pair(4, COLOR_BLUE, COLOR_BLACK);    // 命令模式蓝色
+            init_pair(5, COLOR_RED, COLOR_BLACK);     // 错误信息红色
+            init_pair(6, COLOR_YELLOW, COLOR_BLACK);  // 高亮当前行黄色
+        }
+    }
+
     void load_file() {
         std::ifstream file("text.txt");
         if (file.is_open()) {
@@ -171,14 +184,14 @@ private:
                 text[y] = text[y].substr(0, x);
                 y++;
                 x = 0;
-            } else if (ch==KEY_LEFT){
-                move_cursor(-1,0);
-            }else if (ch==KEY_RIGHT){
-                move_cursor(1,0);
-            }else if (ch==KEY_UP){
-                move_cursor(0,-1);
-            }else if (ch==KEY_DOWN){
-                move_cursor(0,1);
+            } else if (ch == KEY_LEFT) {
+                move_cursor(-1, 0);
+            } else if (ch == KEY_RIGHT) {
+                move_cursor(1, 0);
+            } else if (ch == KEY_UP) {
+                move_cursor(0, -1);
+            } else if (ch == KEY_DOWN) {
+                move_cursor(0, 1);
             } else {
                 text[y].insert(x, 1, ch);
                 x++;
@@ -235,15 +248,15 @@ private:
             save_file();
             endwin();
             exit(0);
-        } else if(is_number(command_str)){
-            int line_number=std::stoi(command_str);
-            if (line_number>=1&&line_number<=text.size()){
-                y=line_number-1;
-                x=0;
-            }else{
-                refresh();
+        } else if (is_number(command_str)) {
+            int line_number = std::stoi(command_str);
+            if (line_number >= 1 && line_number <= text.size()) {
+                y = line_number - 1;
+                x = 0;
+            } else {
+                display_message("Line number out of range.");
             }
-        }else {
+        } else {
             mvprintw(y, x, "Unknown command: %s", command_str.c_str());
             refresh();
         }
@@ -276,7 +289,17 @@ private:
         move(max_y - 1, 0);
         clrtoeol();
         if (show) {
+            if (mode == "--INSERT--") {
+                attron(COLOR_PAIR(3));  // 插入模式绿色
+            } else if (mode == "--NORMAL--") {
+                attron(COLOR_PAIR(4));  // 正常模式蓝色
+            } else {
+                attron(COLOR_PAIR(2));  // 命令模式反转色
+            }
             mvprintw(max_y - 1, 0, "%s", mode.c_str());
+            attroff(COLOR_PAIR(3));
+            attroff(COLOR_PAIR(4));
+            attroff(COLOR_PAIR(2));
         }
         refresh();
     }
@@ -294,8 +317,17 @@ private:
     void display_text_with_line_numbers() {
         int line_number_width = get_line_number_width();
         for (int i = 0; i < text.size(); i++) {
+            if (i == y) {
+                attron(COLOR_PAIR(6));  // 高亮当前行黄色
+            } else {
+                attron(COLOR_PAIR(1));  // 默认颜色
+            }
+
             mvprintw(i, 0, "%*d ", line_number_width, i + 1);
             mvprintw(i, line_number_width + 1, "%s", text[i].c_str());
+
+            attroff(COLOR_PAIR(6));  // 取消高亮当前行
+            attroff(COLOR_PAIR(1));  // 取消默认颜色
         }
     }
 
@@ -333,19 +365,31 @@ private:
             refresh();
         }
     }
-       //判断是否为数字
+
     bool is_number(const std::string &str) {
-    if (str.empty()) return false;  // 空字符串不是数字
+        if (str.empty()) return false;  // 空字符串不是数字
 
-    for (char ch : str) {
-        if (!std::isdigit(ch)) {
-            return false;  // 如果有任何非数字字符，返回 false
+        for (char ch : str) {
+            if (!std::isdigit(ch)) {
+                return false;  // 如果有任何非数字字符，返回 false
+            }
         }
+        return true;
     }
-    return true;
-}
-};
 
+    void display_message(const std::string &message) {
+        int max_y, max_x;
+        getmaxyx(stdscr, max_y, max_x);
+        move(max_y - 2, 0);
+        clrtoeol();
+        attron(COLOR_PAIR(5));  // 错误信息红色
+        mvprintw(max_y - 2, 0, "%s", message.c_str());
+        attroff(COLOR_PAIR(5));
+        refresh();
+        napms(1000);  // 显示1秒
+        clear();
+    }
+};
 
 int main() {
     MiniVim editor;
