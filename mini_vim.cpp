@@ -15,8 +15,6 @@ private:
     std::string command_str;
     std::string mode = "--NORMAL--";
 
-    bool no_colors = false;  // 新增变量，用来跟踪是否处于无颜色模式
-
     // Undo/Redo Stacks
     std::stack<std::pair<std::vector<std::string>, std::pair<int, int>>> undo_stack;  // Text + Cursor
     std::stack<std::pair<std::vector<std::string>, std::pair<int, int>>> redo_stack;  // Text + Cursor
@@ -250,9 +248,6 @@ private:
             save_file();
             endwin();
             exit(0);
-        } else if (command_str == "bg") {  // 切换颜色模式
-            no_colors = !no_colors;  // 切换颜色模式
-            display_mode();
         } else if (is_number(command_str)) {
             int line_number = std::stoi(command_str);
             if (line_number >= 1 && line_number <= text.size()) {
@@ -294,46 +289,90 @@ private:
         move(max_y - 1, 0);
         clrtoeol();
         if (show) {
-            if (!no_colors) {
-                // 使用颜色模式
-                if (mode == "--INSERT--") {
-                    attron(COLOR_PAIR(3));  // 插入模式绿色
-                } else if (mode == "--NORMAL--") {
-                    attron(COLOR_PAIR(4));  // 正常模式蓝色
-                } else {
-                    attron(COLOR_PAIR(2));  // 命令模式反转色
-                }
-                mvprintw(max_y - 1, 0, "%s", mode.c_str());
-                attroff(COLOR_PAIR(3));
-                attroff(COLOR_PAIR(4));
-                attroff(COLOR_PAIR(2));
+            if (mode == "--INSERT--") {
+                attron(COLOR_PAIR(3));  // 插入模式绿色
+            } else if (mode == "--NORMAL--") {
+                attron(COLOR_PAIR(4));  // 正常模式蓝色
             } else {
-                // 不使用颜色模式，直接显示文本
-                mvprintw(max_y - 1, 0, "%s", mode.c_str());
+                attron(COLOR_PAIR(2));  // 命令模式反转色
             }
+            mvprintw(max_y - 1, 0, "%s", mode.c_str());
+            attroff(COLOR_PAIR(3));
+            attroff(COLOR_PAIR(4));
+            attroff(COLOR_PAIR(2));
         }
         refresh();
     }
 
+    int get_line_number_width() {
+        int num_lines = text.size();
+        int width = 1;
+        while (num_lines >= 10) {
+            num_lines /= 10;
+            width++;
+        }
+        return width;
+    }
+
     void display_text_with_line_numbers() {
-        int line_num_width = get_line_number_width();
-        for (int i = 0; i < text.size(); ++i) {
+        int line_number_width = get_line_number_width();
+        for (int i = 0; i < text.size(); i++) {
             if (i == y) {
-                attron(COLOR_PAIR(6));  // 高亮当前行
+                attron(COLOR_PAIR(6));  // 高亮当前行黄色
+            } else {
+                attron(COLOR_PAIR(1));  // 默认颜色
             }
-            mvprintw(i, 0, "%*d ", line_num_width, i + 1);  // 打印行号
-            mvprintw(i, line_num_width + 1, "%s", text[i].c_str());
-            attroff(COLOR_PAIR(6));  // 取消高亮
+
+            mvprintw(i, 0, "%*d ", line_number_width, i + 1);
+            mvprintw(i, line_number_width + 1, "%s", text[i].c_str());
+
+            attroff(COLOR_PAIR(6));  // 取消高亮当前行
+            attroff(COLOR_PAIR(1));  // 取消默认颜色
         }
     }
 
-    int get_line_number_width() {
-        return std::to_string(text.size()).length() + 2;
+    void save_state_to_undo() {
+        // Save current text and cursor position to undo stack
+        undo_stack.push({text, {x, y}});
+        // Clear redo stack
+        while (!redo_stack.empty()) {
+            redo_stack.pop();
+        }
+    }
+
+    void undo() {
+        if (!undo_stack.empty()) {
+            // Save current state to redo stack
+            redo_stack.push({text, {x, y}});
+            // Restore undo stack state
+            text = undo_stack.top().first;
+            x = undo_stack.top().second.first;
+            y = undo_stack.top().second.second;
+            undo_stack.pop();
+            refresh();
+        }
+    }
+
+    void redo() {
+        if (!redo_stack.empty()) {
+            // Save current state to undo stack
+            undo_stack.push({text, {x, y}});
+            // Restore redo stack state
+            text = redo_stack.top().first;
+            x = redo_stack.top().second.first;
+            y = redo_stack.top().second.second;
+            redo_stack.pop();
+            refresh();
+        }
     }
 
     bool is_number(const std::string &str) {
-        for (char c : str) {
-            if (!isdigit(c)) return false;
+        if (str.empty()) return false;  // 空字符串不是数字
+
+        for (char ch : str) {
+            if (!std::isdigit(ch)) {
+                return false;  // 如果有任何非数字字符，返回 false
+            }
         }
         return true;
     }
@@ -341,43 +380,19 @@ private:
     void display_message(const std::string &message) {
         int max_y, max_x;
         getmaxyx(stdscr, max_y, max_x);
-        mvprintw(max_y - 2, 0, message.c_str());
+        move(max_y - 2, 0);
+        clrtoeol();
+        attron(COLOR_PAIR(5));  // 错误信息红色
+        mvprintw(max_y - 2, 0, "%s", message.c_str());
+        attroff(COLOR_PAIR(5));
         refresh();
-        napms(2000);
-    }
-
-    void save_state_to_undo() {
-        undo_stack.push({text, {x, y}});
-        while (!redo_stack.empty()) {
-            redo_stack.pop();  // 清空 redo 堆栈
-        }
-    }
-
-    void undo() {
-        if (!undo_stack.empty()) {
-            auto last_state = undo_stack.top();
-            undo_stack.pop();
-            text = last_state.first;
-            x = last_state.second.first;
-            y = last_state.second.second;
-            redo_stack.push(last_state);  // 保存到 redo 堆栈
-        }
-    }
-
-    void redo() {
-        if (!redo_stack.empty()) {
-            auto last_state = redo_stack.top();
-            redo_stack.pop();
-            text = last_state.first;
-            x = last_state.second.first;
-            y = last_state.second.second;
-            undo_stack.push(last_state);  // 保存到 undo 堆栈
-        }
+        napms(1000);  // 显示1秒
+        clear();
     }
 };
 
 int main() {
-    MiniVim vim;
-    vim.run();
+    MiniVim editor;
+    editor.run();
     return 0;
 }
