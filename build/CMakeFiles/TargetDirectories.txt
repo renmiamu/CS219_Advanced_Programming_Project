@@ -1,0 +1,3 @@
+/mnt/d/sustech/CS219_Advanced_Programming_Project/CS219_Advanced_Programming_Project/build/CMakeFiles/rebuild_cache.dir
+/mnt/d/sustech/CS219_Advanced_Programming_Project/CS219_Advanced_Programming_Project/build/CMakeFiles/edit_cache.dir
+/mnt/d/sustech/CS219_Advanced_Programming_Project/CS219_Advanced_Programming_Project/build/CMakeFiles/MiniVim.dir

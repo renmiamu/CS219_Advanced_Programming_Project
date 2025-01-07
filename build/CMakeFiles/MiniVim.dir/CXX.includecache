@@ -1,0 +1,28 @@
+#IncludeRegexLine: ^[ 	]*[#%][ 	]*(include|import)[ 	]*[<"]([^">]+)([">])
+
+#IncludeRegexScan: ^.*$
+
+#IncludeRegexComplain: ^$
+
+#IncludeRegexTransform: 
+
+../include/MiniVim.h
+ncurses.h
+-
+iostream
+-
+fstream
+-
+cstring
+-
+string
+-
+vector
+-
+stack
+-
+
+/mnt/d/sustech/CS219_Advanced_Programming_Project/CS219_Advanced_Programming_Project/src/MiniVim.cpp
+MiniVim.h
+/mnt/d/sustech/CS219_Advanced_Programming_Project/CS219_Advanced_Programming_Project/src/MiniVim.h
+
