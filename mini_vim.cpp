@@ -71,7 +71,7 @@ public:
                 case 'u':  // Undo
                     undo();
                     break;
-                case 'r':  // Redo
+                case 18:  // Redo
                     redo();
                     break;
                 case KEY_LEFT:
@@ -105,10 +105,7 @@ public:
                 case 'd':
                     next_ch = getch();
                     if (next_ch == 'd') {
-                        if (!text.empty() && y < text.size()) {
-                            text.erase(text.begin() + y);
-                            x = 0;
-                        }
+                        delete_line();
                     } else {
                         ungetch(next_ch);
                     }
@@ -124,10 +121,7 @@ public:
                     }
                     break;
                 case 'p':
-                    if (!copied_line.empty()) {
-                        text.insert(text.begin() + y + 1, copied_line);
-                        y++;
-                    }
+                    paste();
                     break;
                 default:
                     break;
@@ -136,6 +130,35 @@ public:
     }
 
 private:
+    void paste(){
+        if (!copied_line.empty()) {
+            save_state_to_undo();
+            text.insert(text.begin() + y + 1, copied_line);
+            y++;
+        }
+    }
+    void delete_line(){
+        if (!text.empty() && y < text.size()) 
+        {
+            save_state_to_undo();
+            if (y == 0 && text.size() == 1)
+            {
+                text[y].erase(get_line_number_width()-1);
+            }
+            else
+            {
+                text.erase(text.begin() + y);
+                y --;
+                if (y < 0)
+                {
+                    y = 0;
+                }
+                
+            }
+            x = 0;
+        }
+    }
+    
     void init_colors() {
         if (has_colors()) {
             start_color();
