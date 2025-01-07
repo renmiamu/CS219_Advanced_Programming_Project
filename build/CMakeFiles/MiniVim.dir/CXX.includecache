@@ -13,14 +13,16 @@ iostream
 -
 fstream
 -
-cstring
--
 string
 -
 vector
 -
 stack
 -
+
+/mnt/d/sustech/CS219_Advanced_Programming_Project/CS219_Advanced_Programming_Project/main.cpp
+MiniVim.h
+/mnt/d/sustech/CS219_Advanced_Programming_Project/CS219_Advanced_Programming_Project/MiniVim.h
 
 /mnt/d/sustech/CS219_Advanced_Programming_Project/CS219_Advanced_Programming_Project/src/MiniVim.cpp
 MiniVim.h

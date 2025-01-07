@@ -1,14 +1,19 @@
   #include "MiniVim.h"
+MiniVim::MiniVim() {
+    initscr();
+    raw();
+    keypad(stdscr, TRUE);
+    noecho();
+    curs_set(1);
+    init_colors();
 
-  MiniVim::MiniVim() {
-      initscr();
-      raw();
-      keypad(stdscr, TRUE);
-      noecho();
-      curs_set(1);
-      init_colors();
-      load_file();
-  }
+    load_file();
+
+    view_start_x = 0;   // 初始显示的起始列为 0
+    view_start_y = 0;   // 初始显示的起始行为 0
+    screen_width = COLS - get_line_number_width() - 2; // 屏幕宽度
+    screen_height = LINES - 1; // 屏幕高度（减去模式行的高度）
+}
 
   MiniVim::~MiniVim() {
       endwin();
@@ -177,9 +182,15 @@
               }
           } else if (ch == '\n') {
               text.insert(text.begin() + y + 1, text[y].substr(x));
-              text[y] = text[y].substr(0, x);
-              y++;
-              x = 0;
+    text[y] = text[y].substr(0, x);
+    y++;
+    x = 0;
+
+    // 检查光标是否已经在内容显示的最后一行
+    if (y >= view_start_y + screen_height - 1) {
+        view_start_y++;
+        y = view_start_y + screen_height - 2; // 将光标固定在内容显示区域的最后一行
+    }
           } else if (ch == KEY_LEFT) {
               move_cursor(-1, 0);
           } else if (ch == KEY_RIGHT) {
@@ -269,15 +280,33 @@
   }
 
   void MiniVim::move_cursor(int dx, int dy) {
-      x += dx;
-      y += dy;
-      if (x < 0) x = 0;
-      if (y < 0) y = 0;
-      if (y >= text.size()) y = text.size() - 1;
-      if (x > text[y].length()) x = text[y].length();
-      move(y, x + get_line_number_width() + 1);
-      refresh();
-  }
+    x += dx;
+    y += dy;
+
+    // 限制光标在文本内容的有效范围内
+    if (y < 0) y = 0;
+    if (y >= text.size()) y = text.size() - 1;
+    if (x < 0) x = 0;
+    if (x > text[y].length()) x = text[y].length();
+
+    // 滚动视图：纵向
+    if (y < view_start_y) {
+        view_start_y = y; // 向上滚动
+    } else if (y >= view_start_y + screen_height - 1) {
+        view_start_y++; // 向下滚动
+    }
+
+    // 滚动视图：横向
+    if (x < view_start_x) {
+        view_start_x = x; // 向左滚动
+    } else if (x >= view_start_x + screen_width - 1) {
+        view_start_x = x - screen_width + 1; // 向右滚动
+    }
+
+    // 更新光标的实际位置
+    move(y - view_start_y, x - view_start_x + get_line_number_width() + 1);
+    refresh();
+}
 
   void MiniVim::display_mode(bool show) {
       int max_y, max_x;
@@ -311,21 +340,33 @@
   }
 
   void MiniVim::display_text_with_line_numbers() {
-      int line_number_width = get_line_number_width();
-      for (int i = 0; i < text.size(); i++) {
-          if (i == y) {
-              attron(COLOR_PAIR(6));  // 高亮当前行黄色
-          } else {
-              attron(COLOR_PAIR(1));  // 默认颜色
-          }
+    int line_number_width = get_line_number_width();
 
-          mvprintw(i, 0, "%*d ", line_number_width, i + 1);
-          mvprintw(i, line_number_width + 1, "%s", text[i].c_str());
+    for (int i = 0; i < screen_height - 1; ++i) { // 遍历内容显示区域
+        int text_line = i + view_start_y; // 当前显示的文本行号
+        if (text_line >= text.size()) break; // 超出文本内容时停止渲染
 
-          attroff(COLOR_PAIR(6));  // 取消高亮当前行
-          attroff(COLOR_PAIR(1));  // 取消默认颜色
-      }
-  }
+        // 获取当前行内容，从 view_start_x 开始截取屏幕宽度
+        std::string line = text[text_line];
+        if (view_start_x < line.length()) {
+            line = line.substr(view_start_x, screen_width); // 截取可见范围内的内容
+        } else {
+            line = ""; // 如果起始列超出行长度，显示空内容
+        }
+
+        // 如果是当前光标所在的行，显示高亮
+        if (text_line == y) {
+            attron(COLOR_PAIR(6)); // 高亮颜色
+            mvprintw(i, 0, "%*d %s", line_number_width, text_line + 1, line.c_str());
+            attroff(COLOR_PAIR(6));
+        } else {
+            mvprintw(i, 0, "%*d %s", line_number_width, text_line + 1, line.c_str());
+        }
+    }
+
+    // 显示模式行
+    display_mode();
+}
 
   void MiniVim::save_state_to_undo() {
       // 保存当前文本和光标位置到撤销栈
