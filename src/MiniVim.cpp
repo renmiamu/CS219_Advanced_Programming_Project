@@ -160,56 +160,66 @@ MiniVim::MiniVim() {
       }
   }
 
-  void MiniVim::insert_mode() {
-      int ch;
-      move(y, x + get_line_number_width() + 1);
-      while (1) {
-          ch = getch();
-          if (ch == 27) {
-              return;
-          }
-          save_state_to_undo();  // 保存状态以便撤销
+void MiniVim::insert_mode() {
+    int ch;
+    move(y - view_start_y, x + get_line_number_width() + 1);
 
-          if (ch == KEY_BACKSPACE || ch == 127) {
-              if (x > 0) {
-                  text[y].erase(x - 1, 1);
-                  x--;
-              } else if (y > 0) {
-                  x = text[y - 1].length();
-                  text[y - 1] += text[y];
-                  text.erase(text.begin() + y);
-                  y--;
-              }
-          } else if (ch == '\n') {
-              text.insert(text.begin() + y + 1, text[y].substr(x));
-    text[y] = text[y].substr(0, x);
-    y++;
-    x = 0;
+    while (true) {
+        ch = getch();
+        if (ch == 27) { // ESC 退出插入模式
+            return;
+        }
 
-    // 检查光标是否已经在内容显示的最后一行
-    if (y >= view_start_y + screen_height - 1) {
-        view_start_y++;
-        y = view_start_y + screen_height - 2; // 将光标固定在内容显示区域的最后一行
+        save_state_to_undo(); // 保存当前状态以便撤销
+
+        if (ch == KEY_BACKSPACE || ch == 127) { // 处理退格键
+            if (x > 0) {
+                text[y].erase(x - 1, 1);
+                x--;
+            } else if (y > 0) {
+                x = text[y - 1].length();
+                text[y - 1] += text[y];
+                text.erase(text.begin() + y);
+                y--;
+            }
+        } else if (ch == '\n') { // 处理回车键
+            // 将当前行从光标处分成两行
+            text.insert(text.begin() + y + 1, text[y].substr(x));
+            text[y] = text[y].substr(0, x);
+            y++;
+            x = 0;
+
+            // 如果光标超出内容区域的最后一行，滚动视图
+            if (y >= view_start_y + screen_height - 1) {
+                view_start_y++; // 滚动视图
+                y = view_start_y + screen_height - 2; // 光标停留在内容显示区域的最后一行
+            }
+        } else if (ch == KEY_LEFT) {
+            move_cursor(-1, 0);
+        } else if (ch == KEY_RIGHT) {
+            move_cursor(1, 0);
+        } else if (ch == KEY_UP) {
+            move_cursor(0, -1);
+        } else if (ch == KEY_DOWN) {
+            move_cursor(0, 1);
+        } else {
+            text[y].insert(x, 1, ch);
+            x++;
+
+            // 横向滚动
+            if (x >= view_start_x + screen_width - 1) {
+                view_start_x++;
+            }
+        }
+
+        // 重新渲染屏幕
+        clear();
+        display_text_with_line_numbers();
+        display_mode();
+        move(y - view_start_y, x + get_line_number_width() + 1);
+        refresh();
     }
-          } else if (ch == KEY_LEFT) {
-              move_cursor(-1, 0);
-          } else if (ch == KEY_RIGHT) {
-              move_cursor(1, 0);
-          } else if (ch == KEY_UP) {
-              move_cursor(0, -1);
-          } else if (ch == KEY_DOWN) {
-              move_cursor(0, 1);
-          } else {
-              text[y].insert(x, 1, ch);
-              x++;
-          }
-          clear();
-          display_text_with_line_numbers();
-          display_mode();
-          move(y, x + get_line_number_width() + 1);
-          refresh();
-      }
-  }
+}
 
   void MiniVim::command_mode() {
       int max_y, max_x;
@@ -283,11 +293,16 @@ MiniVim::MiniVim() {
     x += dx;
     y += dy;
 
-    // 限制光标在文本内容的有效范围内
-    if (y < 0) y = 0;
-    if (y >= text.size()) y = text.size() - 1;
+    // 限制光标在有效范围内
     if (x < 0) x = 0;
-    if (x > text[y].length()) x = text[y].length();
+    if (y < 0) y = 0;
+    if (y >= text.size()) y = text.size() - 1; // 光标不能超过文本的行数
+    if (x > text[y].length()) x = text[y].length(); // 光标不能超过当前行的长度
+
+    // 如果光标超出内容区域的最后一行，限制光标
+    if (y > view_start_y + screen_height - 2) {
+        y = view_start_y + screen_height - 2; // 光标停留在内容显示区域的最后一行
+    }
 
     // 滚动视图：纵向
     if (y < view_start_y) {
@@ -303,7 +318,7 @@ MiniVim::MiniVim() {
         view_start_x = x - screen_width + 1; // 向右滚动
     }
 
-    // 更新光标的实际位置
+    // 更新光标位置，确保光标不会进入模式行
     move(y - view_start_y, x - view_start_x + get_line_number_width() + 1);
     refresh();
 }

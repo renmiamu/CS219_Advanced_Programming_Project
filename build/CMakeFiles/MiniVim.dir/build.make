@@ -43,10 +43,10 @@ RM = /usr/bin/cmake -E remove -f
 EQUALS = =
 
 # The top-level source directory on which CMake was run.
-CMAKE_SOURCE_DIR = /mnt/d/sustech/CS219_Advanced_Programming_Project/CS219_Advanced_Programming_Project
+CMAKE_SOURCE_DIR = /mnt/c/Users/ximgZ/Desktop/CS219_Advanced_Programming_Project
 
 # The top-level build directory on which CMake was run.
-CMAKE_BINARY_DIR = /mnt/d/sustech/CS219_Advanced_Programming_Project/CS219_Advanced_Programming_Project/build
+CMAKE_BINARY_DIR = /mnt/c/Users/ximgZ/Desktop/CS219_Advanced_Programming_Project/build
 
 # Include any dependencies generated for this target.
 include CMakeFiles/MiniVim.dir/depend.make
@@ -59,29 +59,29 @@ include CMakeFiles/MiniVim.dir/flags.make
 
 CMakeFiles/MiniVim.dir/src/MiniVim.cpp.o: CMakeFiles/MiniVim.dir/flags.make
 CMakeFiles/MiniVim.dir/src/MiniVim.cpp.o: ../src/MiniVim.cpp
-	@$(CMAKE_COMMAND) -E cmake_echo_color --switch=$(COLOR) --green --progress-dir=/mnt/d/sustech/CS219_Advanced_Programming_Project/CS219_Advanced_Programming_Project/build/CMakeFiles --progress-num=$(CMAKE_PROGRESS_1) "Building CXX object CMakeFiles/MiniVim.dir/src/MiniVim.cpp.o"
-	/usr/bin/c++  $(CXX_DEFINES) $(CXX_INCLUDES) $(CXX_FLAGS) -o CMakeFiles/MiniVim.dir/src/MiniVim.cpp.o -c /mnt/d/sustech/CS219_Advanced_Programming_Project/CS219_Advanced_Programming_Project/src/MiniVim.cpp
+	@$(CMAKE_COMMAND) -E cmake_echo_color --switch=$(COLOR) --green --progress-dir=/mnt/c/Users/ximgZ/Desktop/CS219_Advanced_Programming_Project/build/CMakeFiles --progress-num=$(CMAKE_PROGRESS_1) "Building CXX object CMakeFiles/MiniVim.dir/src/MiniVim.cpp.o"
+	/usr/bin/c++  $(CXX_DEFINES) $(CXX_INCLUDES) $(CXX_FLAGS) -o CMakeFiles/MiniVim.dir/src/MiniVim.cpp.o -c /mnt/c/Users/ximgZ/Desktop/CS219_Advanced_Programming_Project/src/MiniVim.cpp
 
 CMakeFiles/MiniVim.dir/src/MiniVim.cpp.i: cmake_force
 	@$(CMAKE_COMMAND) -E cmake_echo_color --switch=$(COLOR) --green "Preprocessing CXX source to CMakeFiles/MiniVim.dir/src/MiniVim.cpp.i"
-	/usr/bin/c++ $(CXX_DEFINES) $(CXX_INCLUDES) $(CXX_FLAGS) -E /mnt/d/sustech/CS219_Advanced_Programming_Project/CS219_Advanced_Programming_Project/src/MiniVim.cpp > CMakeFiles/MiniVim.dir/src/MiniVim.cpp.i
+	/usr/bin/c++ $(CXX_DEFINES) $(CXX_INCLUDES) $(CXX_FLAGS) -E /mnt/c/Users/ximgZ/Desktop/CS219_Advanced_Programming_Project/src/MiniVim.cpp > CMakeFiles/MiniVim.dir/src/MiniVim.cpp.i
 
 CMakeFiles/MiniVim.dir/src/MiniVim.cpp.s: cmake_force
 	@$(CMAKE_COMMAND) -E cmake_echo_color --switch=$(COLOR) --green "Compiling CXX source to assembly CMakeFiles/MiniVim.dir/src/MiniVim.cpp.s"
-	/usr/bin/c++ $(CXX_DEFINES) $(CXX_INCLUDES) $(CXX_FLAGS) -S /mnt/d/sustech/CS219_Advanced_Programming_Project/CS219_Advanced_Programming_Project/src/MiniVim.cpp -o CMakeFiles/MiniVim.dir/src/MiniVim.cpp.s
+	/usr/bin/c++ $(CXX_DEFINES) $(CXX_INCLUDES) $(CXX_FLAGS) -S /mnt/c/Users/ximgZ/Desktop/CS219_Advanced_Programming_Project/src/MiniVim.cpp -o CMakeFiles/MiniVim.dir/src/MiniVim.cpp.s
 
 CMakeFiles/MiniVim.dir/main.cpp.o: CMakeFiles/MiniVim.dir/flags.make
 CMakeFiles/MiniVim.dir/main.cpp.o: ../main.cpp
-	@$(CMAKE_COMMAND) -E cmake_echo_color --switch=$(COLOR) --green --progress-dir=/mnt/d/sustech/CS219_Advanced_Programming_Project/CS219_Advanced_Programming_Project/build/CMakeFiles --progress-num=$(CMAKE_PROGRESS_2) "Building CXX object CMakeFiles/MiniVim.dir/main.cpp.o"
-	/usr/bin/c++  $(CXX_DEFINES) $(CXX_INCLUDES) $(CXX_FLAGS) -o CMakeFiles/MiniVim.dir/main.cpp.o -c /mnt/d/sustech/CS219_Advanced_Programming_Project/CS219_Advanced_Programming_Project/main.cpp
+	@$(CMAKE_COMMAND) -E cmake_echo_color --switch=$(COLOR) --green --progress-dir=/mnt/c/Users/ximgZ/Desktop/CS219_Advanced_Programming_Project/build/CMakeFiles --progress-num=$(CMAKE_PROGRESS_2) "Building CXX object CMakeFiles/MiniVim.dir/main.cpp.o"
+	/usr/bin/c++  $(CXX_DEFINES) $(CXX_INCLUDES) $(CXX_FLAGS) -o CMakeFiles/MiniVim.dir/main.cpp.o -c /mnt/c/Users/ximgZ/Desktop/CS219_Advanced_Programming_Project/main.cpp
 
 CMakeFiles/MiniVim.dir/main.cpp.i: cmake_force
 	@$(CMAKE_COMMAND) -E cmake_echo_color --switch=$(COLOR) --green "Preprocessing CXX source to CMakeFiles/MiniVim.dir/main.cpp.i"
-	/usr/bin/c++ $(CXX_DEFINES) $(CXX_INCLUDES) $(CXX_FLAGS) -E /mnt/d/sustech/CS219_Advanced_Programming_Project/CS219_Advanced_Programming_Project/main.cpp > CMakeFiles/MiniVim.dir/main.cpp.i
+	/usr/bin/c++ $(CXX_DEFINES) $(CXX_INCLUDES) $(CXX_FLAGS) -E /mnt/c/Users/ximgZ/Desktop/CS219_Advanced_Programming_Project/main.cpp > CMakeFiles/MiniVim.dir/main.cpp.i
 
 CMakeFiles/MiniVim.dir/main.cpp.s: cmake_force
 	@$(CMAKE_COMMAND) -E cmake_echo_color --switch=$(COLOR) --green "Compiling CXX source to assembly CMakeFiles/MiniVim.dir/main.cpp.s"
-	/usr/bin/c++ $(CXX_DEFINES) $(CXX_INCLUDES) $(CXX_FLAGS) -S /mnt/d/sustech/CS219_Advanced_Programming_Project/CS219_Advanced_Programming_Project/main.cpp -o CMakeFiles/MiniVim.dir/main.cpp.s
+	/usr/bin/c++ $(CXX_DEFINES) $(CXX_INCLUDES) $(CXX_FLAGS) -S /mnt/c/Users/ximgZ/Desktop/CS219_Advanced_Programming_Project/main.cpp -o CMakeFiles/MiniVim.dir/main.cpp.s
 
 # Object files for target MiniVim
 MiniVim_OBJECTS = \
@@ -96,7 +96,7 @@ MiniVim: CMakeFiles/MiniVim.dir/main.cpp.o
 MiniVim: CMakeFiles/MiniVim.dir/build.make
 MiniVim: /usr/lib/x86_64-linux-gnu/libncurses.so
 MiniVim: CMakeFiles/MiniVim.dir/link.txt
-	@$(CMAKE_COMMAND) -E cmake_echo_color --switch=$(COLOR) --green --bold --progress-dir=/mnt/d/sustech/CS219_Advanced_Programming_Project/CS219_Advanced_Programming_Project/build/CMakeFiles --progress-num=$(CMAKE_PROGRESS_3) "Linking CXX executable MiniVim"
+	@$(CMAKE_COMMAND) -E cmake_echo_color --switch=$(COLOR) --green --bold --progress-dir=/mnt/c/Users/ximgZ/Desktop/CS219_Advanced_Programming_Project/build/CMakeFiles --progress-num=$(CMAKE_PROGRESS_3) "Linking CXX executable MiniVim"
 	$(CMAKE_COMMAND) -E cmake_link_script CMakeFiles/MiniVim.dir/link.txt --verbose=$(VERBOSE)
 
 # Rule to build all files generated by this target.
@@ -109,6 +109,6 @@ CMakeFiles/MiniVim.dir/clean:
 .PHONY : CMakeFiles/MiniVim.dir/clean
 
 CMakeFiles/MiniVim.dir/depend:
-	cd /mnt/d/sustech/CS219_Advanced_Programming_Project/CS219_Advanced_Programming_Project/build && $(CMAKE_COMMAND) -E cmake_depends "Unix Makefiles" /mnt/d/sustech/CS219_Advanced_Programming_Project/CS219_Advanced_Programming_Project /mnt/d/sustech/CS219_Advanced_Programming_Project/CS219_Advanced_Programming_Project /mnt/d/sustech/CS219_Advanced_Programming_Project/CS219_Advanced_Programming_Project/build /mnt/d/sustech/CS219_Advanced_Programming_Project/CS219_Advanced_Programming_Project/build /mnt/d/sustech/CS219_Advanced_Programming_Project/CS219_Advanced_Programming_Project/build/CMakeFiles/MiniVim.dir/DependInfo.cmake --color=$(COLOR)
+	cd /mnt/c/Users/ximgZ/Desktop/CS219_Advanced_Programming_Project/build && $(CMAKE_COMMAND) -E cmake_depends "Unix Makefiles" /mnt/c/Users/ximgZ/Desktop/CS219_Advanced_Programming_Project /mnt/c/Users/ximgZ/Desktop/CS219_Advanced_Programming_Project /mnt/c/Users/ximgZ/Desktop/CS219_Advanced_Programming_Project/build /mnt/c/Users/ximgZ/Desktop/CS219_Advanced_Programming_Project/build /mnt/c/Users/ximgZ/Desktop/CS219_Advanced_Programming_Project/build/CMakeFiles/MiniVim.dir/DependInfo.cmake --color=$(COLOR)
 .PHONY : CMakeFiles/MiniVim.dir/depend
 

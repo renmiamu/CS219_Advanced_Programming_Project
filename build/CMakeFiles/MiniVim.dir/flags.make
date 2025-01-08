@@ -6,5 +6,5 @@ CXX_FLAGS =   -std=gnu++17
 
 CXX_DEFINES = 
 
-CXX_INCLUDES = -I/mnt/d/sustech/CS219_Advanced_Programming_Project/CS219_Advanced_Programming_Project/include 
+CXX_INCLUDES = -I/mnt/c/Users/ximgZ/Desktop/CS219_Advanced_Programming_Project/include 
 

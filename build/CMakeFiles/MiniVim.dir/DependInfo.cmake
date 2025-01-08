@@ -4,8 +4,8 @@ set(CMAKE_DEPENDS_LANGUAGES
   )
 # The set of files for implicit dependencies of each language:
 set(CMAKE_DEPENDS_CHECK_CXX
-  "/mnt/d/sustech/CS219_Advanced_Programming_Project/CS219_Advanced_Programming_Project/main.cpp" "/mnt/d/sustech/CS219_Advanced_Programming_Project/CS219_Advanced_Programming_Project/build/CMakeFiles/MiniVim.dir/main.cpp.o"
-  "/mnt/d/sustech/CS219_Advanced_Programming_Project/CS219_Advanced_Programming_Project/src/MiniVim.cpp" "/mnt/d/sustech/CS219_Advanced_Programming_Project/CS219_Advanced_Programming_Project/build/CMakeFiles/MiniVim.dir/src/MiniVim.cpp.o"
+  "/mnt/c/Users/ximgZ/Desktop/CS219_Advanced_Programming_Project/main.cpp" "/mnt/c/Users/ximgZ/Desktop/CS219_Advanced_Programming_Project/build/CMakeFiles/MiniVim.dir/main.cpp.o"
+  "/mnt/c/Users/ximgZ/Desktop/CS219_Advanced_Programming_Project/src/MiniVim.cpp" "/mnt/c/Users/ximgZ/Desktop/CS219_Advanced_Programming_Project/build/CMakeFiles/MiniVim.dir/src/MiniVim.cpp.o"
   )
 set(CMAKE_CXX_COMPILER_ID "GNU")
 

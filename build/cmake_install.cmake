@@ -1,4 +1,4 @@
-# Install script for directory: /mnt/d/sustech/CS219_Advanced_Programming_Project/CS219_Advanced_Programming_Project
+# Install script for directory: /mnt/c/Users/ximgZ/Desktop/CS219_Advanced_Programming_Project
 
 # Set the install prefix
 if(NOT DEFINED CMAKE_INSTALL_PREFIX)
@@ -45,5 +45,5 @@ endif()
 
 string(REPLACE ";" "\n" CMAKE_INSTALL_MANIFEST_CONTENT
        "${CMAKE_INSTALL_MANIFEST_FILES}")
-file(WRITE "/mnt/d/sustech/CS219_Advanced_Programming_Project/CS219_Advanced_Programming_Project/build/${CMAKE_INSTALL_MANIFEST}"
+file(WRITE "/mnt/c/Users/ximgZ/Desktop/CS219_Advanced_Programming_Project/build/${CMAKE_INSTALL_MANIFEST}"
      "${CMAKE_INSTALL_MANIFEST_CONTENT}")
