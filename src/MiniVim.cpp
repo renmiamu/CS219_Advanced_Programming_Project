@@ -1,12 +1,40 @@
   #include "MiniVim.h"
-MiniVim::MiniVim() {
+MiniVim::MiniVim(const std::string &filename) {
     initscr();
     raw();
     keypad(stdscr, TRUE);
     noecho();
     curs_set(1);
     init_colors();
-    file_name = "../files/text.txt";
+    file_name = "../files/" + filename + ".txt";
+
+    std::ifstream new_file(file_name);
+
+    if (!new_file.is_open()) {
+        std::ofstream create_file(file_name);
+        if (!create_file.is_open()) {
+            display_message("cannot create file: " + file_name);
+            return;
+        }
+        create_file << "this is a new file.\n";
+        create_file.close();
+        display_message("file doesn't exist, new file created: " + file_name);
+    } else {
+        if (new_file.peek() == EOF) {
+            new_file.close(); 
+
+            std::ofstream out_file(file_name, std::ios::out);
+            if (out_file.is_open()) {
+                out_file << " ";
+                out_file.close();
+            }
+        } else {
+            display_message("entered " + file_name);
+        }
+    }
+
+    new_file.close();
+
     load_file();
 
     view_start_x = 0;
@@ -115,6 +143,17 @@ MiniVim::MiniVim() {
               default:
                   break;
           }
+          // 如果光标超出内容显示区域的最后一行，滚动视图
+            if (y >= view_start_y + screen_height - 1) {
+                view_start_y++;
+                y = view_start_y + screen_height - 2;
+            }
+            // 重新渲染屏幕
+        clear();
+        display_text_with_line_numbers();
+        display_mode();
+        move(y - view_start_y, x - view_start_x + get_line_number_width() + 1);
+        refresh();
       }
   }
   
@@ -171,6 +210,10 @@ void MiniVim::insert_mode() {
     while (true) {
         ch = getch();
         if (ch == 27) {  // ESC 键退出插入模式
+            if (y >= view_start_y + screen_height - 1) {
+                view_start_y++;
+                y = view_start_y + screen_height - 2;
+            }
             return;
         }
 
@@ -260,28 +303,39 @@ void MiniVim::insert_mode() {
 
   void MiniVim::process_command() {
     if (command_str == "w") {
-        save_file();
+        save_file(file_name);
     } else if (command_str == "q") {
         endwin();
         exit(0);
     } else if (command_str == "wq") {
-        save_file();
+        save_file(file_name);
         endwin();
         exit(0);
-    } else if (command_str == "background") { // 检测背景颜色切换命令
+    } else if (command_str == "background") {
         toggle_background();
-    } else if (command_str.rfind("s/", 0) == 0) { // 判断命令是否以 "s/" 开头
-        handle_find_and_replace(); // 调用搜索和替换的函数
-    } else if (is_number(command_str)) {
-        int line_number = std::stoi(command_str);
-        if (line_number >= 1 && line_number <= text.size()) {
-            y = line_number - 1;
-            x = 0;
-        } else {
-            display_message("line number exceeded.");
-        }
-    } else if (command_str.rfind("cd/", 0) == 0) { // 判断命令是否以 "cd/" 开头
-        change_file(command_str.substr(3)); // 提取路径并调用切换文件函数
+    } else if (command_str.rfind("s/", 0) == 0) {
+        handle_find_and_replace();
+    }else if (is_number(command_str)) {
+    int line_number = std::stoi(command_str);
+    if (line_number >= 1 && line_number <= text.size()) {
+        y = line_number - 1;
+        x = 0;
+
+            if (y >= view_start_y + screen_height - 1) {
+                view_start_y++;
+                y = view_start_y + screen_height - 2;
+            }
+        clear();
+        display_text_with_line_numbers();
+        display_mode();
+        refresh();
+    } else {
+        display_message("line number exceeded.");
+    }
+} else if (command_str.rfind("cd/", 0) == 0) {
+        std::string filename = "../files/" + command_str.substr(3) + ".txt";
+        file_name = filename;
+        change_file(filename);
     } else {
         display_message("unknown command: " + command_str);
     }
@@ -325,8 +379,8 @@ void MiniVim::handle_find_and_replace() {
     }
 }
 
-  void MiniVim::save_file() {
-      std::ofstream file(file_name);
+  void MiniVim::save_file(const std::string &filename) {
+      std::ofstream file(filename);
       if (file.is_open()) {
           for (const auto &line : text) {
               file << line << std::endl;
@@ -336,30 +390,30 @@ void MiniVim::handle_find_and_replace() {
   }
 
 void MiniVim::move_cursor(int dx, int dy) {
-    x += dx; // 更新光标列位置
-    y += dy; // 更新光标行位置
+    x += dx;
+    y += dy;
 
     // 限制光标在文件的有效范围内
-    if (y < 0) y = 0;
-    if (y >= text.size()) y = text.size() - 1; // 光标不能超过文件的最后一行
     if (x < 0) x = 0;
-    if (x > text[y].length()) x = text[y].length(); // 光标不能超过当前行的内容长度
+    if (y < 0) y = 0;
+    if (y >= text.size()) y = text.size() - 1; // 光标不能超过文本的最后一行
+    if (x > text[y].length()) x = text[y].length(); // 光标不能超过当前行的长度
 
-    // 垂直滚动逻辑
+    // **垂直滚动：调整 view_start_y**
     if (y < view_start_y) {
-        view_start_y = y; // 向上滚动视图
+        view_start_y = y; // 光标在屏幕上方，向上滚动
     } else if (y >= view_start_y + screen_height - 1) {
-        view_start_y++; // 向下滚动视图
+        view_start_y = y - (screen_height - 2); // 光标在屏幕下方，向下滚动
     }
 
-    // 水平滚动逻辑
+    // **水平滚动：调整 view_start_x**
     if (x < view_start_x) {
-        view_start_x = x; // 向左滚动视图
+        view_start_x = x; // 光标在屏幕左侧，向左滚动
     } else if (x >= view_start_x + screen_width - 1) {
-        view_start_x++; // 向右滚动视图
+        view_start_x = x - (screen_width - 1); // 光标在屏幕右侧，向右滚动
     }
 
-    // 更新光标位置到屏幕上
+    // 更新光标在屏幕上的实际位置
     move(y - view_start_y, x - view_start_x + get_line_number_width() + 1);
     refresh();
 }
@@ -449,7 +503,7 @@ void MiniVim::display_text_with_line_numbers() {
 }
 
   void MiniVim::save_state_to_undo() {
-      // 保存当前文本和光标位置到撤销栈
+      //保存当前文本和光标位置到撤销栈
       undo_stack.push({text, {x, y}});
       // 清空重做栈
       while (!redo_stack.empty()) {
@@ -542,7 +596,6 @@ void MiniVim::change_file(const std::string &filename) {
     std::ifstream new_file(filename);
 
     if (!new_file.is_open()) {
-        // 如果文件不存在，则创建新文件
         std::ofstream create_file(filename);
         if (!create_file.is_open()) {
             display_message("cannot create file: " + filename);
@@ -564,7 +617,7 @@ void MiniVim::change_file(const std::string &filename) {
     open_file.close();
 
     if (text.empty()) {
-        text.push_back("new file created");
+        text.push_back(filename);
     }
 
     x = 0;

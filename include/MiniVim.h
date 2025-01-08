@@ -6,6 +6,7 @@
 #include <string>
 #include <vector>
 #include <stack>
+#include <filesystem>
 
 class MiniVim {
 private:
@@ -41,7 +42,7 @@ private:
     void insert_mode();                         // 插入模式逻辑
     void command_mode();                        // 命令模式逻辑
     void process_command();                     // 处理命令输入
-    void save_file();                           // 保存文件
+    void save_file(const std::string &filename);                           // 保存文件
     void move_cursor(int dx, int dy);           // 移动光标
     void display_mode(bool show = true);        // 显示模式行
     int get_line_number_width();                // 计算行号宽度
@@ -57,7 +58,7 @@ private:
     void change_file(const std::string &filename);
 
 public:
-    MiniVim();  // 构造函数
+    MiniVim(const std::string &filename);  // 构造函数
     ~MiniVim(); // 析构函数
 
     void run(); // 编辑器主程序入口

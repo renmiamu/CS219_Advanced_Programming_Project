@@ -1,7 +1,9 @@
 #include "MiniVim.h"
 
 int main() {
-    MiniVim editor;
+    std:: string filename;
+    std:: cin >> filename;
+    MiniVim editor = MiniVim(filename);
     editor.run();
     return 0;
 }
