@@ -293,32 +293,35 @@ void MiniVim::insert_mode() {
     x += dx;
     y += dy;
 
-    // 限制光标在有效范围内
+    // 限制光标在文件的有效范围内
     if (x < 0) x = 0;
     if (y < 0) y = 0;
-    if (y >= text.size()) y = text.size() - 1; // 光标不能超过文本的行数
+    if (y >= text.size()) y = text.size() - 1; // 光标不能超过文本的最后一行
     if (x > text[y].length()) x = text[y].length(); // 光标不能超过当前行的长度
 
-    // 如果光标超出内容区域的最后一行，限制光标
+    // 如果光标超出内容显示区域的最后一行，但文件还有更多内容
     if (y > view_start_y + screen_height - 2) {
-        y = view_start_y + screen_height - 2; // 光标停留在内容显示区域的最后一行
+        if (y < text.size()) {
+            // 滚动视图向下
+            view_start_y++;
+        }
+        // 确保光标仍然停留在屏幕的最后一行
+        y = view_start_y + screen_height - 2;
     }
 
-    // 滚动视图：纵向
+    // 如果光标超出屏幕顶部，则向上滚动
     if (y < view_start_y) {
-        view_start_y = y; // 向上滚动
-    } else if (y >= view_start_y + screen_height - 1) {
-        view_start_y++; // 向下滚动
+        view_start_y = y; // 向上滚动视图
     }
 
-    // 滚动视图：横向
+    // 横向滚动逻辑：确保光标列始终可见
     if (x < view_start_x) {
         view_start_x = x; // 向左滚动
     } else if (x >= view_start_x + screen_width - 1) {
         view_start_x = x - screen_width + 1; // 向右滚动
     }
 
-    // 更新光标位置，确保光标不会进入模式行
+    // 更新光标位置到屏幕上
     move(y - view_start_y, x - view_start_x + get_line_number_width() + 1);
     refresh();
 }
