@@ -366,8 +366,7 @@ void MiniVim::handle_find_and_replace() {
         while ((pos = line.find(old_str, pos)) != std::string::npos) {
             line.replace(pos, old_str.length(), new_str);
             replace_count++;
-            if (!global_replace) break;
-            pos += new_str.length();
+            pos += (global_replace ? new_str.length() : old_str.length());
         }
     }
 
