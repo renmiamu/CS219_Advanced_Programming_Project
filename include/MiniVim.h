@@ -32,6 +32,7 @@ private:
     // 撤销与重做栈
     std::stack<std::pair<std::vector<std::string>, std::pair<int, int>>> undo_stack; // 保存文本和光标位置的撤销栈
     std::stack<std::pair<std::vector<std::string>, std::pair<int, int>>> redo_stack; // 保存文本和光标位置的重做栈
+    bool is_default_background = true;
 
     // 私有方法
     void init_colors();                         // 初始化颜色
@@ -51,7 +52,8 @@ private:
     void display_message(const std::string& message); // 显示状态或错误信息
     void delete_line();                         // 删除当前行
     void handle_find_and_replace();
-
+    void toggle_background();
+    
 public:
     MiniVim();  // 构造函数
     ~MiniVim(); // 析构函数

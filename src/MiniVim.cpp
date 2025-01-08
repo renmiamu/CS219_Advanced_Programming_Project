@@ -117,6 +117,7 @@ MiniVim::MiniVim() {
           }
       }
   }
+  
   void MiniVim::delete_line() {
     if (!text.empty() && y < text.size()) {
         if (get_line_number_width()-1 != text[y].length())
@@ -137,17 +138,20 @@ MiniVim::MiniVim() {
     }
   }
 
-  void MiniVim::init_colors() {
-      if (has_colors()) {
-          start_color();
-          init_pair(1, COLOR_WHITE, COLOR_BLACK);   // 默认颜色（白色文字，黑色背景）
-          init_pair(2, COLOR_BLACK, COLOR_WHITE);   // 反转色（黑色文字，白色背景）
-          init_pair(3, COLOR_GREEN, COLOR_BLACK);   // 插入模式绿色
-          init_pair(4, COLOR_BLUE, COLOR_BLACK);    // 命令模式蓝色
-          init_pair(5, COLOR_RED, COLOR_BLACK);     // 错误信息红色
-          init_pair(6, COLOR_YELLOW, COLOR_BLACK);  // 高亮当前行黄色
-      }
-  }
+void MiniVim::init_colors() {
+    if (has_colors()) {
+        start_color();
+        init_pair(1, COLOR_WHITE, COLOR_BLACK);   // 默认颜色（白色文字，黑色背景）
+        init_pair(2, COLOR_BLACK, COLOR_WHITE);   // 反转颜色（黑色文字，白色背景）
+        init_pair(3, COLOR_GREEN, COLOR_BLACK);   // 插入模式绿色
+        init_pair(4, COLOR_BLUE, COLOR_BLACK);    // 命令模式蓝色
+        init_pair(5, COLOR_RED, COLOR_BLACK);     // 错误信息红色
+        init_pair(6, COLOR_YELLOW, COLOR_BLACK);  // 高亮当前行黄色字体，黑色背景
+        init_pair(7, COLOR_BLACK, COLOR_YELLOW);  // 高亮当前行黑色字体，黄色背景（白色模式下）
+        init_pair(8, COLOR_BLUE, COLOR_WHITE);    // 模式行深蓝色字体，白色背景（白色模式下）
+        init_pair(9, COLOR_RED, COLOR_WHITE);
+    }
+}
 
   void MiniVim::load_file() {
       std::ifstream file("../text.txt");
@@ -264,6 +268,8 @@ void MiniVim::insert_mode() {
         save_file();
         endwin();
         exit(0);
+    } else if (command_str == "background") { // 检测背景颜色切换命令
+        toggle_background();
     } else if (command_str.rfind("s/", 0) == 0) { // 判断命令是否以 "s/" 开头
         handle_find_and_replace(); // 调用搜索和替换的函数
     } else if (is_number(command_str)) {
@@ -357,25 +363,31 @@ void MiniVim::move_cursor(int dx, int dy) {
 }
 
   void MiniVim::display_mode(bool show) {
-      int max_y, max_x;
-      getmaxyx(stdscr, max_y, max_x);
-      move(max_y - 1, 0);
-      clrtoeol();
-      if (show) {
-          if (mode == "--INSERT--") {
-              attron(COLOR_PAIR(3));  // 插入模式绿色
-          } else if (mode == "--NORMAL--") {
-              attron(COLOR_PAIR(4));  // 正常模式蓝色
-          } else {
-              attron(COLOR_PAIR(2));  // 命令模式反转色
-          }
-          mvprintw(max_y - 1, 0, "%s", mode.c_str());
-          attroff(COLOR_PAIR(3));
-          attroff(COLOR_PAIR(4));
-          attroff(COLOR_PAIR(2));
-      }
-      refresh();
-  }
+    int max_y, max_x;
+    getmaxyx(stdscr, max_y, max_x);
+    move(max_y - 1, 0); // 移动到模式行位置
+    clrtoeol();         // 清空当前行
+
+    if (show) {
+        if (is_default_background) {
+            // 黑色背景模式
+            attron(COLOR_PAIR(3)); // 绿色字体，黑色背景
+        } else {
+            // 白色背景模式
+            attron(COLOR_PAIR(8)); // 深蓝色字体，白色背景
+        }
+
+        mvprintw(max_y - 1, 0, "%s", mode.c_str()); // 打印模式字符串
+
+        if (is_default_background) {
+            attroff(COLOR_PAIR(3));
+        } else {
+            attroff(COLOR_PAIR(8));
+        }
+    }
+
+    refresh();
+}
 
   int MiniVim::get_line_number_width() {
       int num_lines = text.size();
@@ -387,7 +399,7 @@ void MiniVim::move_cursor(int dx, int dy) {
       return width;
   }
 
-  void MiniVim::display_text_with_line_numbers() {
+void MiniVim::display_text_with_line_numbers() {
     int line_number_width = get_line_number_width();
 
     for (int i = 0; i < screen_height - 1; ++i) { // 遍历内容显示区域
@@ -402,13 +414,31 @@ void MiniVim::move_cursor(int dx, int dy) {
             line = ""; // 如果起始列超出行长度，显示空内容
         }
 
-        // 如果是当前光标所在的行，显示高亮
-        if (text_line == y) {
-            attron(COLOR_PAIR(6)); // 高亮颜色
+        // 动态选择颜色对
+        if (text_line == y) { // 如果是当前光标所在的行
+            if (is_default_background) {
+                attron(COLOR_PAIR(6)); // 黑色背景：黄色字体，高亮
+            } else {
+                attron(COLOR_PAIR(7)); // 白色背景：黑色字体，黄色背景，高亮
+            }
             mvprintw(i, 0, "%*d %s", line_number_width, text_line + 1, line.c_str());
-            attroff(COLOR_PAIR(6));
-        } else {
+            if (is_default_background) {
+                attroff(COLOR_PAIR(6));
+            } else {
+                attroff(COLOR_PAIR(7));
+            }
+        } else { // 非高亮行
+            if (is_default_background) {
+                attron(COLOR_PAIR(1)); // 默认背景
+            } else {
+                attron(COLOR_PAIR(2)); // 反转背景
+            }
             mvprintw(i, 0, "%*d %s", line_number_width, text_line + 1, line.c_str());
+            if (is_default_background) {
+                attroff(COLOR_PAIR(1));
+            } else {
+                attroff(COLOR_PAIR(2));
+            }
         }
     }
 
@@ -463,15 +493,47 @@ void MiniVim::move_cursor(int dx, int dy) {
   }
 
   void MiniVim::display_message(const std::string &message) {
-      int max_y, max_x;
-      getmaxyx(stdscr, max_y, max_x);
-      move(max_y - 2, 0);
-      clrtoeol();
-      attron(COLOR_PAIR(5));  // 错误信息红色
-      mvprintw(max_y - 2, 0, "%s", message.c_str());
-      attroff(COLOR_PAIR(5));
-      refresh();
-      napms(1000);  // 显示1秒
-      clear();
-  }
-  
+    int max_y, max_x;
+    getmaxyx(stdscr, max_y, max_x);
+    move(max_y - 2, 0); // 移动到消息行位置
+    clrtoeol();         // 清空当前行
+
+    // 动态选择颜色对
+    if (is_default_background) {
+        attron(COLOR_PAIR(5)); // 黑色背景模式：红色字体，黑色背景
+    } else {
+        attron(COLOR_PAIR(9)); // 白色背景模式：红色字体，白色背景
+    }
+
+    mvprintw(max_y - 2, 0, "%s", message.c_str()); // 打印消息
+
+    // 关闭颜色属性
+    if (is_default_background) {
+        attroff(COLOR_PAIR(5));
+    } else {
+        attroff(COLOR_PAIR(9));
+    }
+
+    refresh();
+    napms(1000);  // 显示1秒
+    clear();
+}
+
+  void MiniVim::toggle_background() {
+    is_default_background = !is_default_background; // 切换背景状态
+
+    // 设置全局背景颜色
+    if (is_default_background) {
+        bkgd(COLOR_PAIR(1)); // 默认背景：黑色背景，白色文字
+        display_message("BLACK");
+    } else {
+        bkgd(COLOR_PAIR(2)); // 白色背景，黑色文字
+        display_message("WHITE");
+    }
+
+    // 清屏并重新渲染所有内容
+    clear();
+    display_text_with_line_numbers();
+    display_mode();
+    refresh();
+}
