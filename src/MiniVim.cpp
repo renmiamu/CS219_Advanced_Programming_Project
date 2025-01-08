@@ -50,12 +50,11 @@ MiniVim::MiniVim(const std::string &filename) {
   void MiniVim::run() {
       int ch;
       while (true) {
-          clear();
-          display_text_with_line_numbers();
-          display_mode();
-          move(y, x + get_line_number_width() + 1);
-          refresh();
-
+            clear();
+        display_text_with_line_numbers();
+        display_mode();
+        move(y - view_start_y, x - view_start_x + get_line_number_width() + 1);
+        refresh();
           ch = getch();
           int next_ch;
           switch (ch) {
@@ -80,11 +79,14 @@ MiniVim::MiniVim(const std::string &filename) {
                   break;
               case 'l':
                   move_cursor(1, 0);
+                  if (x >= view_start_x + screen_width - 1) {
+                    view_start_x++;
+                }
                   break;
-              case 'u':  // 撤销
+              case 'u':
                   undo();
                   break;
-              case 18:  // 重做
+              case 18: 
                   redo();
                   break;
               case KEY_LEFT:
@@ -92,6 +94,9 @@ MiniVim::MiniVim(const std::string &filename) {
                   break;
               case KEY_RIGHT:
                   move_cursor(1, 0);
+                  if (x >= view_start_x + screen_width - 1) {
+                view_start_x++;
+            }
                   break;
               case KEY_UP:
                   move_cursor(0, -1);
@@ -133,22 +138,20 @@ MiniVim::MiniVim(const std::string &filename) {
                       ungetch(next_ch);
                   }
                   break;
-              case 'p':
+            case 'p':
                 if (!copied_line.empty()) {
                 save_state_to_undo();
                 text.insert(text.begin() + y + 1, copied_line);
                 y++;
-      }
-                  break;
-              default:
-                  break;
-          }
-          // 如果光标超出内容显示区域的最后一行，滚动视图
-            if (y >= view_start_y + screen_height - 1) {
-                view_start_y++;
-                y = view_start_y + screen_height - 2;
-            }
-            // 重新渲染屏幕
+                }
+                break;
+            default:
+                break;
+        }
+        if (y >= view_start_y + screen_height - 1) {
+            view_start_y++;
+            y = view_start_y + screen_height - 2;
+        }
         clear();
         display_text_with_line_numbers();
         display_mode();
@@ -209,7 +212,7 @@ void MiniVim::insert_mode() {
 
     while (true) {
         ch = getch();
-        if (ch == 27) {  // ESC 键退出插入模式
+        if (ch == 27) {
             if (y >= view_start_y + screen_height - 1) {
                 view_start_y++;
                 y = view_start_y + screen_height - 2;
@@ -219,7 +222,7 @@ void MiniVim::insert_mode() {
 
         save_state_to_undo();
 
-        if (ch == KEY_BACKSPACE || ch == 127) { // 处理退格键
+        if (ch == KEY_BACKSPACE || ch == 127) {
             if (x > 0) {
                 text[y].erase(x - 1, 1);
                 x--;
@@ -229,13 +232,12 @@ void MiniVim::insert_mode() {
                 text.erase(text.begin() + y);
                 y--;
             }
-        } else if (ch == '\n') { // 按回车键
+        } else if (ch == '\n') {
             text.insert(text.begin() + y + 1, text[y].substr(x));
             text[y] = text[y].substr(0, x);
             y++;
             x = 0;
 
-            // 如果光标超出内容显示区域的最后一行，滚动视图
             if (y >= view_start_y + screen_height - 1) {
                 view_start_y++;
                 y = view_start_y + screen_height - 2;
@@ -248,17 +250,15 @@ void MiniVim::insert_mode() {
             move_cursor(0, -1);
         } else if (ch == KEY_DOWN) {
             move_cursor(0, 1);
-        } else { // 插入普通字符
+        } else { 
             text[y].insert(x, 1, ch);
             x++;
 
-            // 水平滚动逻辑
             if (x >= view_start_x + screen_width - 1) {
                 view_start_x++;
             }
         }
 
-        // 重新渲染屏幕
         clear();
         display_text_with_line_numbers();
         display_mode();
@@ -320,11 +320,10 @@ void MiniVim::insert_mode() {
     if (line_number >= 1 && line_number <= text.size()) {
         y = line_number - 1;
         x = 0;
-
-            if (y >= view_start_y + screen_height - 1) {
-                view_start_y++;
-                y = view_start_y + screen_height - 2;
-            }
+        if (y >= view_start_y + screen_height - 1) {
+            view_start_y++;
+            y = view_start_y + screen_height - 2;
+        }
         clear();
         display_text_with_line_numbers();
         display_mode();
@@ -393,27 +392,23 @@ void MiniVim::move_cursor(int dx, int dy) {
     x += dx;
     y += dy;
 
-    // 限制光标在文件的有效范围内
     if (x < 0) x = 0;
     if (y < 0) y = 0;
-    if (y >= text.size()) y = text.size() - 1; // 光标不能超过文本的最后一行
-    if (x > text[y].length()) x = text[y].length(); // 光标不能超过当前行的长度
+    if (y >= text.size()) y = text.size() - 1;
+    if (x > text[y].length()) x = text[y].length();
 
-    // **垂直滚动：调整 view_start_y**
     if (y < view_start_y) {
-        view_start_y = y; // 光标在屏幕上方，向上滚动
+        view_start_y = y;
     } else if (y >= view_start_y + screen_height - 1) {
-        view_start_y = y - (screen_height - 2); // 光标在屏幕下方，向下滚动
+        view_start_y = y - (screen_height - 2);
     }
 
-    // **水平滚动：调整 view_start_x**
     if (x < view_start_x) {
-        view_start_x = x; // 光标在屏幕左侧，向左滚动
+        view_start_x = x;
     } else if (x >= view_start_x + screen_width - 1) {
-        view_start_x = x - (screen_width - 1); // 光标在屏幕右侧，向右滚动
+        view_start_x = x - (screen_width - 1);
     }
 
-    // 更新光标在屏幕上的实际位置
     move(y - view_start_y, x - view_start_x + get_line_number_width() + 1);
     refresh();
 }
