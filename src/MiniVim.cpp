@@ -255,28 +255,67 @@ void MiniVim::insert_mode() {
   }
 
   void MiniVim::process_command() {
-      if (command_str == "w") {
-          save_file();
-      } else if (command_str == "q") {
-          endwin();
-          exit(0);
-      } else if (command_str == "wq") {
-          save_file();
-          endwin();
-          exit(0);
-      } else if (is_number(command_str)) {
-          int line_number = std::stoi(command_str);
-          if (line_number >= 1 && line_number <= text.size()) {
-              y = line_number - 1;
-              x = 0;
-          } else {
-              display_message("行号超出范围。");
-          }
-      } else {
-          mvprintw(y, x, "未知命令: %s", command_str.c_str());
-          refresh();
-      }
-  }
+    if (command_str == "w") {
+        save_file();
+    } else if (command_str == "q") {
+        endwin();
+        exit(0);
+    } else if (command_str == "wq") {
+        save_file();
+        endwin();
+        exit(0);
+    } else if (command_str.rfind("s/", 0) == 0) { // 判断命令是否以 "s/" 开头
+        handle_find_and_replace(); // 调用搜索和替换的函数
+    } else if (is_number(command_str)) {
+        int line_number = std::stoi(command_str);
+        if (line_number >= 1 && line_number <= text.size()) {
+            y = line_number - 1;
+            x = 0;
+        } else {
+            display_message("line number exceeded.");
+        }
+    } else {
+        display_message("unknown command: " + command_str);
+    }
+}
+
+void MiniVim::handle_find_and_replace() {
+    size_t first_slash = command_str.find('/', 2);
+    size_t second_slash = command_str.find('/', first_slash + 1);
+    size_t third_slash = command_str.find('/', second_slash + 1);
+
+    if (first_slash == std::string::npos || second_slash == std::string::npos) {
+        display_message("command format invalid, please use: s/old/new/g");
+        return;
+    }
+
+    std::string old_str = command_str.substr(2, first_slash - 2); 
+    std::string new_str = command_str.substr(first_slash + 1, second_slash - first_slash - 1); 
+
+    bool global_replace = (third_slash != std::string::npos && command_str.substr(third_slash) == "/g");
+
+    if (old_str.empty()) {
+        display_message("old string cannot be empty");
+        return;
+    }
+
+    int replace_count = 0;
+    for (std::string &line : text) {
+        size_t pos = 0;
+        while ((pos = line.find(old_str, pos)) != std::string::npos) {
+            line.replace(pos, old_str.length(), new_str);
+            replace_count++;
+            if (!global_replace) break;
+            pos += new_str.length();
+        }
+    }
+
+    if (replace_count > 0) {
+        display_message("successfully replaced, total replaced in " + std::to_string(replace_count) + " places.");
+    } else {
+        display_message("cannot find old string.");
+    }
+}
 
   void MiniVim::save_file() {
       std::ofstream file("../text.txt");

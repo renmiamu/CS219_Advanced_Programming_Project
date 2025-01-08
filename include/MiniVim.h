@@ -50,6 +50,7 @@ private:
     bool is_number(const std::string& str);     // 判断字符串是否是数字
     void display_message(const std::string& message); // 显示状态或错误信息
     void delete_line();                         // 删除当前行
+    void handle_find_and_replace();
 
 public:
     MiniVim();  // 构造函数
