@@ -6,7 +6,7 @@ MiniVim::MiniVim() {
     noecho();
     curs_set(1);
     init_colors();
-
+    file_name = "../files/text.txt";
     load_file();
 
     view_start_x = 0;
@@ -154,7 +154,7 @@ void MiniVim::init_colors() {
 }
 
   void MiniVim::load_file() {
-      std::ifstream file("../text.txt");
+      std::ifstream file(file_name);
       if (file.is_open()) {
           std::string line;
           while (getline(file, line)) {
@@ -280,6 +280,8 @@ void MiniVim::insert_mode() {
         } else {
             display_message("line number exceeded.");
         }
+    } else if (command_str.rfind("cd/", 0) == 0) { // 判断命令是否以 "cd/" 开头
+        change_file(command_str.substr(3)); // 提取路径并调用切换文件函数
     } else {
         display_message("unknown command: " + command_str);
     }
@@ -324,7 +326,7 @@ void MiniVim::handle_find_and_replace() {
 }
 
   void MiniVim::save_file() {
-      std::ofstream file("../text.txt");
+      std::ofstream file(file_name);
       if (file.is_open()) {
           for (const auto &line : text) {
               file << line << std::endl;
@@ -498,16 +500,14 @@ void MiniVim::display_text_with_line_numbers() {
     move(max_y - 2, 0); // 移动到消息行位置
     clrtoeol();         // 清空当前行
 
-    // 动态选择颜色对
     if (is_default_background) {
-        attron(COLOR_PAIR(5)); // 黑色背景模式：红色字体，黑色背景
+        attron(COLOR_PAIR(5));
     } else {
-        attron(COLOR_PAIR(9)); // 白色背景模式：红色字体，白色背景
+        attron(COLOR_PAIR(9));
     }
 
-    mvprintw(max_y - 2, 0, "%s", message.c_str()); // 打印消息
+    mvprintw(max_y - 2, 0, "%s", message.c_str());
 
-    // 关闭颜色属性
     if (is_default_background) {
         attroff(COLOR_PAIR(5));
     } else {
@@ -515,7 +515,7 @@ void MiniVim::display_text_with_line_numbers() {
     }
 
     refresh();
-    napms(1000);  // 显示1秒
+    napms(1000);
     clear();
 }
 
@@ -536,4 +536,46 @@ void MiniVim::display_text_with_line_numbers() {
     display_text_with_line_numbers();
     display_mode();
     refresh();
+}
+
+void MiniVim::change_file(const std::string &filename) {
+    std::ifstream new_file(filename);
+
+    if (!new_file.is_open()) {
+        // 如果文件不存在，则创建新文件
+        std::ofstream create_file(filename);
+        if (!create_file.is_open()) {
+            display_message("cannot create file: " + filename);
+            return;
+        }
+        create_file.close();
+        display_message("file doesn't exists, new file created: " + filename);
+    } else {
+        new_file.close();
+    }
+
+    text.clear();
+
+    std::ifstream open_file(filename);
+    std::string line;
+    while (getline(open_file, line)) {
+        text.push_back(line);
+    }
+    open_file.close();
+
+    if (text.empty()) {
+        text.push_back("new file created");
+    }
+
+    x = 0;
+    y = 0;
+    view_start_x = 0;
+    view_start_y = 0;
+
+    clear();
+    display_text_with_line_numbers();
+    display_mode();
+    refresh();
+
+    display_message("enter file: " + filename);
 }

@@ -25,6 +25,7 @@ private:
     std::vector<std::string> text; // 存储整个文件的内容
     std::string copied_line;       // 用于存储复制的行内容
     std::string command_str;       // 命令模式的输入字符串
+    std::string file_name;
 
     // 当前模式
     std::string mode = "--NORMAL--"; // 当前编辑器的模式
@@ -53,7 +54,8 @@ private:
     void delete_line();                         // 删除当前行
     void handle_find_and_replace();
     void toggle_background();
-    
+    void change_file(const std::string &filename);
+
 public:
     MiniVim();  // 构造函数
     ~MiniVim(); // 析构函数
