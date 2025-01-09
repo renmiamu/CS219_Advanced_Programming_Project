@@ -59,8 +59,6 @@ private:
     void handle_find_and_replace();
     void toggle_background();
     void change_file(const std::string &filename);
-    void increase_font_size();
-    void decrease_font_size();
     void update_screen_size();
     void set_font_style(int style);
 public:

@@ -47,138 +47,170 @@ MiniVim::MiniVim(const std::string &filename) {
       endwin();
   }
 
- void MiniVim::run() {
-      int ch;
-      while (true) {
-            clear();
-        display_text_with_line_numbers();
-        display_mode();
-        move(y - view_start_y, x - view_start_x + get_line_number_width() + 1);
-        refresh();
-          ch = getch();
-          int next_ch;
-          switch (ch) {
-              case 'i':
-                  mode = "--INSERT--";
-                  display_mode();
-                  insert_mode();
-                  mode = "--NORMAL--";
-                  break;
-              case ':':
-                  display_mode(false);
-                  command_mode();
-                  break;
-              case 'h':
-                  move_cursor(-1, 0);
-                  break;
-              case 'j':
-                  move_cursor(0, 1);
-                  break;
-              case 'k':
-                  move_cursor(0, -1);
-                  break;
-              case 'l':
-                  move_cursor(1, 0);
-                  if (x >= view_start_x + screen_width - 1) {
-                    view_start_x++;
-                }
-                  break;
-              case 'u':
-                  undo();
-                  break;
-              case 18: 
-                  redo();
-                  break;
-              case KEY_LEFT:
-                  move_cursor(-1, 0);
-                  break;
-              case KEY_RIGHT:
-                  move_cursor(1, 0);
-                  if (x >= view_start_x + screen_width - 1) {
-                view_start_x++;
-            }
-                  break;
-              case KEY_UP:
-                  move_cursor(0, -1);
-                  break;
-              case KEY_DOWN:
-                  move_cursor(0, 1);
-                  break;
-              case '0':
-                  x = 0;
-                  break;
-              case '$':
-                  x = text[y].length();
-                  break;
-              case 'g':
-                  if (getch() == 'g') {
-                      y = 0;
-                      x = 0;
-                  }
-                  break;
-              case 'G':
-                  y = text.size() - 1;
-                  x = 0;
-                  break;
-              case 'd':
-                next_ch = getch();
-                if (next_ch == 'd') {
-                    delete_line();
-                } else {
-                      ungetch(next_ch);
-                  }
-                  break;
-              case 'y':
-                  next_ch = getch();
-                  if (next_ch == 'y') {
-                      if (!text.empty() && y < text.size()) {
-                          copied_line = text[y];
-                      }
-                  } else {
-                      ungetch(next_ch);
-                  }
-                  break;
-            case 'p':
-                if (!copied_line.empty()) {
-                save_state_to_undo();
-                text.insert(text.begin() + y + 1, copied_line);
-                y++;
-                }
-                break;
-            case 24: // Ctrl + '+'
-                if (getch() == '+') {
-                    increase_font_size();
-                } else if (getch() == '-') {
-                    decrease_font_size();
-                }
-                break;
-            case 2: // Ctrl + 'b'，切换到加粗字体
-                set_font_style(A_BOLD);
-                break;
-
-            case 21: // Ctrl + 'u'，切换到下划线字体
-                set_font_style(A_UNDERLINE);
-                break;
-
-            case 14: // Ctrl + 'n'，切换到正常字体
-                set_font_style(A_NORMAL);
-                break;
-
-            default:
-                break;
-        }
-        if (y >= view_start_y + screen_height - 1) {
-            view_start_y++;
-            y = view_start_y + screen_height - 2;
-        }
+void MiniVim::run() {
+    int ch;
+    while (true) {
         clear();
         display_text_with_line_numbers();
         display_mode();
         move(y - view_start_y, x - view_start_x + get_line_number_width() + 1);
         refresh();
+
+        ch = getch();
+        int next_ch;
+        switch (ch) {
+            case 'i':
+                mode = "--INSERT--";
+                display_mode();
+                insert_mode();
+                mode = "--NORMAL--";
+                break;
+
+            case ':':
+                display_mode(false);
+                command_mode();
+                break;
+
+            case 'h':
+                move_cursor(-1, 0);
+                break;
+
+            case 'j':
+                move_cursor(0, 1);
+                break;
+
+            case 'k':
+                move_cursor(0, -1);
+                break;
+
+            case 'l':
+                move_cursor(1, 0);
+                if (x >= view_start_x + screen_width - 1) {
+                    view_start_x++;
+                }
+                break;
+
+            case 'u':
+                undo();
+                break;
+
+            case 18: 
+                redo();
+                break;
+
+            case KEY_LEFT:
+                move_cursor(-1, 0);
+                break;
+
+            case KEY_RIGHT:
+                move_cursor(1, 0);
+                if (x >= view_start_x + screen_width - 1) {
+                    view_start_x++;
+                }
+                break;
+
+            case KEY_UP:
+                move_cursor(0, -1);
+                break;
+
+            case KEY_DOWN:
+                move_cursor(0, 1);
+                break;
+
+            case '0':
+                x = 0;
+                break;
+
+            case '$':
+                x = text[y].length();
+                break;
+
+            case 'g':
+                if (getch() == 'g') {
+                    y = 0;
+                    x = 0;
+                    view_start_y = 0; // 滚动视图到顶部
+                }
+                break;
+
+            case 'G':
+                y = text.size() - 1; // 跳转到最后一行
+                x = 0; // 光标移动到行首
+                break;
+
+            case 'd':
+                next_ch = getch();
+                if (next_ch == 'd') {
+                    delete_line();
+                } else {
+                    ungetch(next_ch);
+                }
+                break;
+
+            case 'y':
+                next_ch = getch();
+                if (next_ch == 'y') {
+                    if (!text.empty() && y < text.size()) {
+                        copied_line = text[y];
+                    }
+                } else {
+                    ungetch(next_ch);
+                }
+                break;
+
+            case 'p':
+                if (!copied_line.empty()) {
+                    save_state_to_undo();
+                    text.insert(text.begin() + y + 1, copied_line);
+                    y++;
+                }
+                break;
+
+            default:
+                break;
+        }
+
+        // 确保光标在视图范围内
+        if (y < view_start_y) {
+            view_start_y = y; // 光标在视图上方时，调整视图顶部
+        } else if (y >= view_start_y + screen_height) {
+            view_start_y = y - (screen_height - 1); // 光标在视图下方时，滚动视图
+        }
+
+        // 确保视图范围不会超出文件内容
+        if (view_start_y + screen_height > text.size()) {
+            view_start_y = text.size() - screen_height; // 限制视图滚动范围
+        }
+        if (view_start_y < 0) {
+            view_start_y = 0; // 防止视图起始位置为负数
+        }
+
+        clear();
+        display_text_with_line_numbers();
+        display_mode();
+        if (x < 0) x = 0;
+    if (y < 0) y = 0;
+    if (y >= text.size()) y = text.size() - 1;
+    if (x > text[y].length()) x = text[y].length();
+
+    if (y < view_start_y) {
+        view_start_y = y;
+    } else if (y >= view_start_y + screen_height - 1) {
+        view_start_y = y - (screen_height - 2);
+    }
+
+    if (x < view_start_x) {
+        view_start_x = x;
+    } else if (x >= view_start_x + screen_width - 1) {
+        view_start_x = x - (screen_width - 1);
+    }
+
+    move(y - view_start_y, x - view_start_x + get_line_number_width() + 1);
+    refresh();
+        refresh();
     }
 }
-  
+
   void MiniVim::delete_line() {
     if (!text.empty() && y < text.size()) {
         if (get_line_number_width()-1 != text[y].length())
@@ -369,6 +401,7 @@ void MiniVim::insert_mode() {
 }
 
 void MiniVim::handle_find_and_replace() {
+    save_state_to_undo();
     size_t first_slash = command_str.find('/', 2);
     size_t second_slash = command_str.find('/', first_slash + 1);
     size_t third_slash = command_str.find('/', second_slash + 1);
@@ -640,26 +673,6 @@ void MiniVim::change_file(const std::string &filename) {
     refresh();
 
     display_message("enter file: " + filename);
-}
-
-void MiniVim::increase_font_size() {
-    if (font_scale < 3) { // 最大放大比例
-        font_scale++;
-        update_screen_size();
-        display_message("Font size increased: " + std::to_string(font_scale));
-    } else {
-        display_message("Maximum font size reached.");
-    }
-}
-
-void MiniVim::decrease_font_size() {
-    if (font_scale > 1) { // 最小缩小比例
-        font_scale--;
-        update_screen_size();
-        display_message("Font size decreased: " + std::to_string(font_scale));
-    } else {
-        display_message("Minimum font size reached.");
-    }
 }
 
 void MiniVim::update_screen_size() {
