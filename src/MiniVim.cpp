@@ -166,6 +166,18 @@ void MiniVim::run() {
                 }
                 break;
 
+            case 2: // Ctrl + B (加粗模式)
+                set_font_style(A_BOLD);
+                break;
+
+            case 21: // Ctrl + U (下划线模式)
+                set_font_style(A_UNDERLINE);
+                break;
+
+            case 14: // Ctrl + N (正常模式)
+                set_font_style(A_NORMAL);
+                break;    
+
             default:
                 break;
         }
@@ -546,48 +558,48 @@ void MiniVim::display_text_with_line_numbers() {
             line = "";
         }
 
-        // 渲染行号
+        // 渲染行号（仅颜色跟内容一致，不受字体样式影响）
         if (is_default_background) {
-            attron(COLOR_PAIR(1)); // 黑色背景模式：白色文字
+            attron(COLOR_PAIR(1)); // 黑色背景：白色文字
         } else {
-            attron(COLOR_PAIR(8)); // 白色背景模式：蓝色文字
+            attron(COLOR_PAIR(2)); // 白色背景：黑色文字
         }
-        mvprintw(i, 0, "%*d ", line_number_width, text_line + 1);
+        mvprintw(i, 0, "%*d ", line_number_width, text_line + 1); // 显示行号
         if (is_default_background) {
             attroff(COLOR_PAIR(1));
         } else {
-            attroff(COLOR_PAIR(8));
+            attroff(COLOR_PAIR(2));
         }
 
         // 渲染行内容
         if (text_line == y) { // 当前行
             if (is_default_background) {
-                attron(COLOR_PAIR(6)); // 黑色背景模式：黄色文字
+                attron(COLOR_PAIR(6) | current_font_style); // 黑色背景：黄色文字 + 字体样式
             } else {
-                attron(COLOR_PAIR(7)); // 白色背景模式：黄色背景，黑色文字
+                attron(COLOR_PAIR(7) | current_font_style); // 白色背景：黄色背景，黑色文字 + 字体样式
             }
             mvprintw(i, line_number_width + 1, "%s", line.c_str());
             if (is_default_background) {
-                attroff(COLOR_PAIR(6));
+                attroff(COLOR_PAIR(6) | current_font_style);
             } else {
-                attroff(COLOR_PAIR(7));
+                attroff(COLOR_PAIR(7) | current_font_style);
             }
         } else { // 普通行
             if (is_default_background) {
-                attron(COLOR_PAIR(1)); // 黑色背景模式：普通文字
+                attron(COLOR_PAIR(1) | current_font_style); // 黑色背景：白色文字 + 字体样式
             } else {
-                attron(COLOR_PAIR(2)); // 白色背景模式：普通文字
+                attron(COLOR_PAIR(2) | current_font_style); // 白色背景：黑色文字 + 字体样式
             }
             mvprintw(i, line_number_width + 1, "%s", line.c_str());
             if (is_default_background) {
-                attroff(COLOR_PAIR(1));
+                attroff(COLOR_PAIR(1) | current_font_style);
             } else {
-                attroff(COLOR_PAIR(2));
+                attroff(COLOR_PAIR(2) | current_font_style);
             }
         }
     }
 
-    display_mode();
+    display_mode(); // 渲染模式行
 }
 
   void MiniVim::save_state_to_undo() {
