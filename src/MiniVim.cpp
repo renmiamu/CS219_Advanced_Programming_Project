@@ -284,16 +284,20 @@ void MiniVim::insert_mode() {
                 y--;
             }
         } else if (ch == '\n') {
-            text.insert(text.begin() + y + 1, text[y].substr(x));
-            text[y] = text[y].substr(0, x);
-            y++;
-            x = 0;
+    // 将光标后面的内容移动到新行
+    text.insert(text.begin() + y + 1, text[y].substr(x));
+    text[y] = text[y].substr(0, x);
 
-            if (y >= view_start_y + screen_height - 1) {
-                view_start_y++;
-                y = view_start_y + screen_height - 2;
-            }
-        } else if (ch == KEY_LEFT) {
+    // 光标移动到新行的行首
+    y++;
+    x = 0; // 重置列到行首
+    view_start_x = 0; // 重置水平视图起始位置
+
+    // 如果超出屏幕高度，更新视图
+    if (y >= view_start_y + screen_height - 1) {
+        view_start_y++;
+    }
+} else if (ch == KEY_LEFT) {
             move_cursor(-1, 0);
         } else if (ch == KEY_RIGHT) {
             move_cursor(1, 0);
@@ -313,7 +317,25 @@ void MiniVim::insert_mode() {
         clear();
         display_text_with_line_numbers();
         display_mode();
-        move(y - view_start_y, x - view_start_x + get_line_number_width() + 1);
+        if (x < 0) x = 0;
+    if (y < 0) y = 0;
+    if (y >= text.size()) y = text.size() - 1;
+    if (x > text[y].length()) x = text[y].length();
+
+    if (y < view_start_y) {
+        view_start_y = y;
+    } else if (y >= view_start_y + screen_height - 1) {
+        view_start_y = y - (screen_height - 2);
+    }
+
+    if (x < view_start_x) {
+        view_start_x = x;
+    } else if (x >= view_start_x + screen_width - 1) {
+        view_start_x = x - (screen_width - 1);
+    }
+
+    move(y - view_start_y, x - view_start_x + get_line_number_width() + 1);
+    refresh();
         refresh();
     }
 }
@@ -524,20 +546,44 @@ void MiniVim::display_text_with_line_numbers() {
             line = "";
         }
 
-        // 渲染行号（始终使用普通样式）
-        attron(COLOR_PAIR(1)); // 行号颜色
+        // 渲染行号
+        if (is_default_background) {
+            attron(COLOR_PAIR(1)); // 黑色背景模式：白色文字
+        } else {
+            attron(COLOR_PAIR(8)); // 白色背景模式：蓝色文字
+        }
         mvprintw(i, 0, "%*d ", line_number_width, text_line + 1);
-        attroff(COLOR_PAIR(1));
+        if (is_default_background) {
+            attroff(COLOR_PAIR(1));
+        } else {
+            attroff(COLOR_PAIR(8));
+        }
 
         // 渲染行内容
         if (text_line == y) { // 当前行
-            attron(COLOR_PAIR(6) | current_font_style); // 应用字体样式
+            if (is_default_background) {
+                attron(COLOR_PAIR(6)); // 黑色背景模式：黄色文字
+            } else {
+                attron(COLOR_PAIR(7)); // 白色背景模式：黄色背景，黑色文字
+            }
             mvprintw(i, line_number_width + 1, "%s", line.c_str());
-            attroff(COLOR_PAIR(6) | current_font_style);
+            if (is_default_background) {
+                attroff(COLOR_PAIR(6));
+            } else {
+                attroff(COLOR_PAIR(7));
+            }
         } else { // 普通行
-            attron(COLOR_PAIR(1) | current_font_style); // 应用字体样式
+            if (is_default_background) {
+                attron(COLOR_PAIR(1)); // 黑色背景模式：普通文字
+            } else {
+                attron(COLOR_PAIR(2)); // 白色背景模式：普通文字
+            }
             mvprintw(i, line_number_width + 1, "%s", line.c_str());
-            attroff(COLOR_PAIR(1) | current_font_style);
+            if (is_default_background) {
+                attroff(COLOR_PAIR(1));
+            } else {
+                attroff(COLOR_PAIR(2));
+            }
         }
     }
 
@@ -615,16 +661,16 @@ void MiniVim::display_text_with_line_numbers() {
     clear();
 }
 
-  void MiniVim::toggle_background() {
+void MiniVim::toggle_background() {
     is_default_background = !is_default_background; // 切换背景状态
 
     // 设置全局背景颜色
     if (is_default_background) {
-        bkgd(COLOR_PAIR(1)); // 默认背景：黑色背景，白色文字
-        display_message("BLACK");
+        bkgd(COLOR_PAIR(1)); // 黑色背景，白色文字
+        display_message("Switched to BLACK background");
     } else {
         bkgd(COLOR_PAIR(2)); // 白色背景，黑色文字
-        display_message("WHITE");
+        display_message("Switched to WHITE background");
     }
 
     // 清屏并重新渲染所有内容
@@ -673,23 +719,6 @@ void MiniVim::change_file(const std::string &filename) {
     refresh();
 
     display_message("enter file: " + filename);
-}
-
-void MiniVim::update_screen_size() {
-    screen_width = (COLS - get_line_number_width() - 2) / font_scale;
-    screen_height = (LINES - 1) / font_scale;
-
-    if (y >= view_start_y + screen_height) {
-        view_start_y = y - screen_height + 1;
-    }
-    if (x >= view_start_x + screen_width) {
-        view_start_x = x - screen_width + 1;
-    }
-
-    clear();
-    display_text_with_line_numbers();
-    display_mode();
-    refresh();
 }
 
 void MiniVim::set_font_style(int style) {
