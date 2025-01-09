@@ -326,17 +326,26 @@ void MiniVim::insert_mode() {
     }else if (is_number(command_str)) {
     int line_number = std::stoi(command_str);
     if (line_number >= 1 && line_number <= text.size()) {
-        y = line_number - 1;
-        x = 0;
-        if (y >= view_start_y + screen_height - 1) {
-            view_start_y++;
-            y = view_start_y + screen_height - 2;
+    y = line_number - 1; // 设置光标到指定行
+    x = 0;               // 重置列到行首
+
+    // 确保目标行在屏幕显示范围内
+    if (y < view_start_y) {
+        view_start_y = y; // 如果目标行在当前视图上方，滚动到目标行
+    } else if (y >= view_start_y + screen_height - 1) {
+        view_start_y = y - (screen_height - 2); // 如果目标行在当前视图下方，滚动到合适位置
+        if (view_start_y < 0) {
+            view_start_y = 0; // 防止滚动起始行小于 0
         }
-        clear();
-        display_text_with_line_numbers();
-        display_mode();
-        refresh();
-    } else {
+    }
+
+    clear();
+    display_text_with_line_numbers();
+    display_mode();
+    refresh();
+}
+
+     else {
         display_message("line number exceeded.");
     }
 } else if (command_str.rfind("cd/", 0) == 0) {
