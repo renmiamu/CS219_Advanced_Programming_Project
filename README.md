@@ -19,11 +19,13 @@ This project initializes the core functionalities of Vim on a Linux system using
     - mode display
     - background color change
     - warnings display
+    - words underline
+    - font bold
 
 #### Contributions
 
-- **Hongli SHEN**: Basic parts without overflow content, undo and redo, line numbers and jumping, background color.
-- **Ximing ZHENG**: bug fixed, overflow content, background color change, search and replace, warning display, switch through multiple files.
+- **Hongli SHEN**: Basic parts without overflow content, undo and redo, line numbers and jumping, background color, document.
+- **Ximing ZHENG**: bug fixed, overflow content, background color change, search and replace, warning display, switch through multiple files, words underline, font bold.
 
 ## Project structure
 
@@ -67,7 +69,7 @@ make
 ./minivim               #run the program
 ```
 
-Should work for macOS and Linux.
+Should work for Linux.
 
 #### Choose file
 
@@ -95,6 +97,8 @@ We start with normal mode when enter mini-vim.
 - `p`: paste the copied line below the cursor
 - `u` for undo and `Ctrl+R` for redo
 - `i`: move to the insert mode
+- `Ctrl+B`: font bold
+- `Ctrl+U`: words underline
 
 **Insert mode**
 
