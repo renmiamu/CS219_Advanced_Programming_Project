@@ -47,7 +47,7 @@ MiniVim::MiniVim(const std::string &filename) {
       endwin();
   }
 
-  void MiniVim::run() {
+ void MiniVim::run() {
       int ch;
       while (true) {
             clear();
@@ -145,6 +145,14 @@ MiniVim::MiniVim(const std::string &filename) {
                 y++;
                 }
                 break;
+            case 24: // Ctrl + '+'
+                if (getch() == '+') {
+                    increase_font_size();
+                } else if (getch() == '-') {
+                    decrease_font_size();
+                }
+                break;
+
             default:
                 break;
         }
@@ -157,8 +165,8 @@ MiniVim::MiniVim(const std::string &filename) {
         display_mode();
         move(y - view_start_y, x - view_start_x + get_line_number_width() + 1);
         refresh();
-      }
-  }
+    }
+}
   
   void MiniVim::delete_line() {
     if (!text.empty() && y < text.size()) {
@@ -625,4 +633,41 @@ void MiniVim::change_file(const std::string &filename) {
     refresh();
 
     display_message("enter file: " + filename);
+}
+
+void MiniVim::increase_font_size() {
+    if (font_scale < 3) { // 最大放大比例
+        font_scale++;
+        update_screen_size();
+        display_message("Font size increased: " + std::to_string(font_scale));
+    } else {
+        display_message("Maximum font size reached.");
+    }
+}
+
+void MiniVim::decrease_font_size() {
+    if (font_scale > 1) { // 最小缩小比例
+        font_scale--;
+        update_screen_size();
+        display_message("Font size decreased: " + std::to_string(font_scale));
+    } else {
+        display_message("Minimum font size reached.");
+    }
+}
+
+void MiniVim::update_screen_size() {
+    screen_width = (COLS - get_line_number_width() - 2) / font_scale;
+    screen_height = (LINES - 1) / font_scale;
+
+    if (y >= view_start_y + screen_height) {
+        view_start_y = y - screen_height + 1;
+    }
+    if (x >= view_start_x + screen_width) {
+        view_start_x = x - screen_width + 1;
+    }
+
+    clear();
+    display_text_with_line_numbers();
+    display_mode();
+    refresh();
 }

@@ -21,6 +21,8 @@ private:
     // 屏幕尺寸
     int screen_width = 0;  // 屏幕显示区域的宽度（行内容可见的字符数）
     int screen_height = 0; // 屏幕显示区域的高度（可显示的行数，不包括模式行）
+    int font_scale = 1; // 字体缩放比例，默认为 1
+
 
     // 文本数据
     std::vector<std::string> text; // 存储整个文件的内容
@@ -56,7 +58,9 @@ private:
     void handle_find_and_replace();
     void toggle_background();
     void change_file(const std::string &filename);
-
+    void increase_font_size();
+    void decrease_font_size();
+    void update_screen_size();
 public:
     MiniVim(const std::string &filename);  // 构造函数
     ~MiniVim(); // 析构函数
