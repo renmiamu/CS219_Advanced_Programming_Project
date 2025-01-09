@@ -152,6 +152,17 @@ MiniVim::MiniVim(const std::string &filename) {
                     decrease_font_size();
                 }
                 break;
+            case 2: // Ctrl + 'b'，切换到加粗字体
+                set_font_style(A_BOLD);
+                break;
+
+            case 21: // Ctrl + 'u'，切换到下划线字体
+                set_font_style(A_UNDERLINE);
+                break;
+
+            case 14: // Ctrl + 'n'，切换到正常字体
+                set_font_style(A_NORMAL);
+                break;
 
             default:
                 break;
@@ -469,47 +480,34 @@ void MiniVim::move_cursor(int dx, int dy) {
 void MiniVim::display_text_with_line_numbers() {
     int line_number_width = get_line_number_width();
 
-    for (int i = 0; i < screen_height - 1; ++i) { // 遍历内容显示区域
-        int text_line = i + view_start_y; // 当前显示的文本行号
-        if (text_line >= text.size()) break; // 超出文本内容时停止渲染
+    for (int i = 0; i < screen_height - 1; ++i) {
+        int text_line = i + view_start_y;
+        if (text_line >= text.size()) break;
 
-        // 获取当前行内容，从 view_start_x 开始截取屏幕宽度
         std::string line = text[text_line];
         if (view_start_x < line.length()) {
-            line = line.substr(view_start_x, screen_width); // 截取可见范围内的内容
+            line = line.substr(view_start_x, screen_width);
         } else {
-            line = ""; // 如果起始列超出行长度，显示空内容
+            line = "";
         }
 
-        // 动态选择颜色对
-        if (text_line == y) { // 如果是当前光标所在的行
-            if (is_default_background) {
-                attron(COLOR_PAIR(6)); // 黑色背景：黄色字体，高亮
-            } else {
-                attron(COLOR_PAIR(7)); // 白色背景：黑色字体，黄色背景，高亮
-            }
-            mvprintw(i, 0, "%*d %s", line_number_width, text_line + 1, line.c_str());
-            if (is_default_background) {
-                attroff(COLOR_PAIR(6));
-            } else {
-                attroff(COLOR_PAIR(7));
-            }
-        } else { // 非高亮行
-            if (is_default_background) {
-                attron(COLOR_PAIR(1)); // 默认背景
-            } else {
-                attron(COLOR_PAIR(2)); // 反转背景
-            }
-            mvprintw(i, 0, "%*d %s", line_number_width, text_line + 1, line.c_str());
-            if (is_default_background) {
-                attroff(COLOR_PAIR(1));
-            } else {
-                attroff(COLOR_PAIR(2));
-            }
+        // 渲染行号（始终使用普通样式）
+        attron(COLOR_PAIR(1)); // 行号颜色
+        mvprintw(i, 0, "%*d ", line_number_width, text_line + 1);
+        attroff(COLOR_PAIR(1));
+
+        // 渲染行内容
+        if (text_line == y) { // 当前行
+            attron(COLOR_PAIR(6) | current_font_style); // 应用字体样式
+            mvprintw(i, line_number_width + 1, "%s", line.c_str());
+            attroff(COLOR_PAIR(6) | current_font_style);
+        } else { // 普通行
+            attron(COLOR_PAIR(1) | current_font_style); // 应用字体样式
+            mvprintw(i, line_number_width + 1, "%s", line.c_str());
+            attroff(COLOR_PAIR(1) | current_font_style);
         }
     }
 
-    // 显示模式行
     display_mode();
 }
 
@@ -675,6 +673,25 @@ void MiniVim::update_screen_size() {
         view_start_x = x - screen_width + 1;
     }
 
+    clear();
+    display_text_with_line_numbers();
+    display_mode();
+    refresh();
+}
+
+void MiniVim::set_font_style(int style) {
+    current_font_style = style;
+
+    // 提示用户当前字体样式
+    if (style == A_BOLD) {
+        display_message("Font style: Bold");
+    } else if (style == A_UNDERLINE) {
+        display_message("Font style: Underline");
+    } else if (style == A_NORMAL) {
+        display_message("Font style: Normal");
+    }
+
+    // 重新渲染界面以应用新的字体样式
     clear();
     display_text_with_line_numbers();
     display_mode();
