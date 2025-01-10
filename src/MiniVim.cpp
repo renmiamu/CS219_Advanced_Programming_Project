@@ -145,7 +145,13 @@ void MiniVim::run() {
                 break;
 
             case '$':
-                x = text[y].length();
+                x = text[y].length(); // 移动到行尾
+    if (x >= view_start_x + screen_width) {
+        view_start_x = x - (screen_width - 1); // 调整水平滚动范围
+    }
+    if (x < view_start_x) {
+        view_start_x = x; // 如果光标在屏幕左边界外，也需要调整水平滚动范围
+    }
                 break;
 
             case 'g':
