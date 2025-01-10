@@ -36,7 +36,7 @@ private:
     int view_start_x = 0, view_start_y = 0; // 滚动状态
     std::stack<std::pair<std::vector<std::string>, std::pair<int, int>>> undo_stack; // 撤销栈
     std::stack<std::pair<std::vector<std::string>, std::pair<int, int>>> redo_stack; // 重做栈
-};
+    };
 
 std::map<std::string, FileContext> file_contexts; // 文件名到文件状态的映射
 std::string current_file; // 当前活动文件名

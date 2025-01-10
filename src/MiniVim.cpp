@@ -42,6 +42,13 @@ MiniVim::MiniVim(const std::string &filename) {
     }
 
     new_file.close();
+     // 初始化文件上下文
+    FileContext context;
+    load_file_into_context(context, current_file);
+    file_contexts[current_file] = context;
+
+    // 恢复当前文件上下文
+    restore_file_context(file_contexts[current_file]);
 
     load_file();
 
@@ -430,8 +437,9 @@ void MiniVim::insert_mode() {
 
   void MiniVim::process_command() {
     if (command_str == "w") {
-        save_file(file_name);
+        save_file(current_file);
     } else if (command_str == "q") {
+        save_current_file_context();
         endwin();
         exit(0);
     } else if (command_str == "wq") {
@@ -467,8 +475,8 @@ void MiniVim::insert_mode() {
         display_message("line number exceeded.");
     }
 } else if (command_str.rfind("cd/", 0) == 0) {
-        std::string filename = "../files/" + command_str.substr(3) + ".txt";
-        file_name = filename;
+    save_current_file_context();
+        std::string filename = command_str.substr(3);
         change_file(filename);
     } else {
         display_message("unknown command: " + command_str);
@@ -760,46 +768,34 @@ void MiniVim::toggle_background() {
 }
 
 void MiniVim::change_file(const std::string &filename) {
-    if (filename.find("../files/") == 0) {
-        if (filename.find(".txt") != 0)
-        {
-            file_name = filename + ".txt";
-        }
-} else {
-    if (filename.find(".txt") != 0)
-        {
-            file_name = filename + ".txt";
-        }
-}
+    // 保存当前文件的上下文
+    save_current_file_context();
 
-    std::string full_path = filename;
+    // 更新当前文件路径
+    std::string new_file = "../files/" + filename + ".txt";
+    current_file = new_file;
 
-    // 保存当前文件状态
-    if (!current_file.empty()) {
-        save_current_file_context();
-    }
-
-    // 检查是否已经加载过该文件
-    if (file_contexts.find(full_path) != file_contexts.end()) {
-        current_file = full_path;
+    // 如果文件已存在于 file_contexts，则恢复其上下文
+    if (file_contexts.find(current_file) != file_contexts.end()) {
         restore_file_context(file_contexts[current_file]);
-        display_message("Switched to file: " + filename);
-        return;
+    } else {
+        // 如果是新文件，加载其内容到新上下文
+        FileContext new_context;
+        load_file_into_context(new_context, current_file);
+        file_contexts[current_file] = new_context;
+
+        // 将新文件的上下文设置为当前编辑状态
+        restore_file_context(new_context);
     }
 
-    // 如果文件未加载，则加载新文件
-    current_file = full_path;
-    FileContext new_context;
-    load_file_into_context(new_context, full_path);
-    file_contexts[current_file] = new_context;
-
-    restore_file_context(file_contexts[current_file]);
-    display_message("Opened new file: " + filename);
+    // 更新屏幕
+    clear();
+    display_text_with_line_numbers();
+    display_mode();
+    refresh();
 }
 
 void MiniVim::save_current_file_context() {
-    if (current_file.empty()) return; // 没有当前文件，直接返回
-
     FileContext &context = file_contexts[current_file];
     context.text = text;
     context.x = x;
@@ -818,16 +814,10 @@ void MiniVim::restore_file_context(const FileContext &context) {
     view_start_y = context.view_start_y;
     undo_stack = context.undo_stack;
     redo_stack = context.redo_stack;
-
-    clear();
-    display_text_with_line_numbers();
-    display_mode();
-    refresh();
 }
 
 void MiniVim::load_file_into_context(FileContext &context, const std::string &filename) {
     std::ifstream file(filename);
-    context.text.clear();
 
     if (file.is_open()) {
         std::string line;
@@ -835,14 +825,12 @@ void MiniVim::load_file_into_context(FileContext &context, const std::string &fi
             context.text.push_back(line);
         }
         file.close();
-    } else {
-        // 如果文件不存在，创建空文件
-        std::ofstream create_file(filename);
-        create_file.close();
-        context.text.push_back(filename); // 插入一行空内容
     }
 
-    // 初始化光标和滚动位置
+    if (context.text.empty()) {
+        context.text.push_back(" "); // 如果文件为空，插入一个空格
+    }
+
     context.x = 0;
     context.y = 0;
     context.view_start_x = 0;
