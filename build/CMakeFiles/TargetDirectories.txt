@@ -1,3 +1,0 @@
-/mnt/c/Users/ximgZ/Desktop/CS219_Advanced_Programming_Project/build/CMakeFiles/rebuild_cache.dir
-/mnt/c/Users/ximgZ/Desktop/CS219_Advanced_Programming_Project/build/CMakeFiles/edit_cache.dir
-/mnt/c/Users/ximgZ/Desktop/CS219_Advanced_Programming_Project/build/CMakeFiles/MiniVim.dir

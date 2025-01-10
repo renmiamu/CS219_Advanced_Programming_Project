@@ -1,1 +1,0 @@
-/usr/bin/c++     CMakeFiles/MiniVim.dir/src/MiniVim.cpp.o CMakeFiles/MiniVim.dir/main.cpp.o  -o MiniVim  -lcurses /usr/lib/x86_64-linux-gnu/libform.so 

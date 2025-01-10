@@ -47,10 +47,8 @@ CS219_Advanced_Programming_Project/                # The root directory
 │   └── MiniVim.cpp              # Implementation file for the MiniVim module
 │
 ├── CMakeLists.txt               # CMake build configuration file for defining build rules
-├── filestext.txt                # Text file related to the project
 ├── main.cpp                     # Entry point of the program
 ├── README.md                    # Documentation providing an overview and usage instructions for the project
-├── text.txt                     # Auxiliary data file related to the project
 
 ```
 
