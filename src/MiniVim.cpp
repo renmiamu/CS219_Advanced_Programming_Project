@@ -50,7 +50,30 @@ MiniVim::MiniVim(const std::string &filename) {
 void MiniVim::run() {
     int ch;
     while (true) {
-        clear();
+        int new_screen_height = LINES - 1; // LINES 表示终端的当前行数
+        int new_screen_width = COLS - get_line_number_width() - 2; // COLS 表示终端的当前列数
+
+        if (new_screen_height != screen_height || new_screen_width != screen_width) {
+            // 更新屏幕尺寸
+            screen_height = new_screen_height;
+            screen_width = new_screen_width;
+
+            // 防止视图范围超出文件内容
+            if (y >= view_start_y + screen_height) {
+                view_start_y = y - screen_height + 1;
+            }
+            if (x >= view_start_x + screen_width) {
+                view_start_x = x - screen_width + 1;
+            }
+            if (view_start_y + screen_height > text.size()) {
+                view_start_y = text.size() - screen_height;
+            }
+            if (view_start_y < 0) {
+                view_start_y = 0;
+            }
+
+            clear(); // 清屏
+        }
         display_text_with_line_numbers();
         display_mode();
         move(y - view_start_y, x - view_start_x + get_line_number_width() + 1);
