@@ -94,7 +94,8 @@ MiniVim_EXTERNAL_OBJECTS =
 MiniVim: CMakeFiles/MiniVim.dir/src/MiniVim.cpp.o
 MiniVim: CMakeFiles/MiniVim.dir/main.cpp.o
 MiniVim: CMakeFiles/MiniVim.dir/build.make
-MiniVim: /usr/lib/x86_64-linux-gnu/libncurses.so
+MiniVim: /usr/lib/x86_64-linux-gnu/libcurses.so
+MiniVim: /usr/lib/x86_64-linux-gnu/libform.so
 MiniVim: CMakeFiles/MiniVim.dir/link.txt
 	@$(CMAKE_COMMAND) -E cmake_echo_color --switch=$(COLOR) --green --bold --progress-dir=/mnt/c/Users/ximgZ/Desktop/CS219_Advanced_Programming_Project/build/CMakeFiles --progress-num=$(CMAKE_PROGRESS_3) "Linking CXX executable MiniVim"
 	$(CMAKE_COMMAND) -E cmake_link_script CMakeFiles/MiniVim.dir/link.txt --verbose=$(VERBOSE)
