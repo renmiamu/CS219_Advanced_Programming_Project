@@ -6,8 +6,15 @@ MiniVim::MiniVim(const std::string &filename) {
     noecho();
     curs_set(1);
     init_colors();
-    file_name = "../files/" + filename + ".txt";
 
+    // 检查文件路径，避免重复前缀
+    if (filename.find("../files/") == 0) {
+        file_name = filename + ".txt";
+    } else {
+        file_name = "../files/" + filename + ".txt";
+    }
+
+    // 打开文件或创建新文件
     std::ifstream new_file(file_name);
 
     if (!new_file.is_open()) {
@@ -16,7 +23,8 @@ MiniVim::MiniVim(const std::string &filename) {
             display_message("cannot create file: " + file_name);
             return;
         }
-        create_file << "this is a new file.\n";
+        // 默认内容为文件的绝对路径
+        create_file << file_name << "\n";
         create_file.close();
         display_message("file doesn't exist, new file created: " + file_name);
     } else {
@@ -42,6 +50,7 @@ MiniVim::MiniVim(const std::string &filename) {
     screen_width = COLS - get_line_number_width() - 2;
     screen_height = LINES - 1;
 }
+
 
   MiniVim::~MiniVim() {
       endwin();
@@ -296,6 +305,10 @@ void MiniVim::init_colors() {
           }
           file.close();
       }
+      // 如果文件内容为空，添加一个空格以确保正常显示
+    if (text.empty()) {
+        text.push_back(" "); // 添加一行空格
+    }
   }
 
 void MiniVim::insert_mode() {
@@ -422,7 +435,7 @@ void MiniVim::insert_mode() {
         endwin();
         exit(0);
     } else if (command_str == "wq") {
-        save_file(file_name);
+        save_file(current_file);
         endwin();
         exit(0);
     } else if (command_str == "background") {
@@ -435,13 +448,12 @@ void MiniVim::insert_mode() {
     y = line_number - 1; // 设置光标到指定行
     x = 0;               // 重置列到行首
 
-    // 确保目标行在屏幕显示范围内
     if (y < view_start_y) {
-        view_start_y = y; // 如果目标行在当前视图上方，滚动到目标行
+        view_start_y = y;
     } else if (y >= view_start_y + screen_height - 1) {
-        view_start_y = y - (screen_height - 2); // 如果目标行在当前视图下方，滚动到合适位置
+        view_start_y = y - (screen_height - 2);
         if (view_start_y < 0) {
-            view_start_y = 0; // 防止滚动起始行小于 0
+            view_start_y = 0;
         }
     }
 
@@ -465,35 +477,61 @@ void MiniVim::insert_mode() {
 
 void MiniVim::handle_find_and_replace() {
     save_state_to_undo();
-    size_t first_slash = command_str.find('/', 2);
-    size_t second_slash = command_str.find('/', first_slash + 1);
-    size_t third_slash = command_str.find('/', second_slash + 1);
+    size_t first_slash = command_str.find('/', 0);
+size_t second_slash = command_str.find('/', first_slash + 1);
+size_t third_slash = command_str.find('/', second_slash + 1);
 
-    if (first_slash == std::string::npos || second_slash == std::string::npos) {
-        display_message("command format invalid, please use: s/old/new/g");
-        return;
-    }
+// 检查命令格式是否正确
+if (first_slash == std::string::npos || second_slash == std::string::npos) {
+    display_message("command format invalid, please use: s/old/new or s/old/new/g");
+    return;
+}
 
-    std::string old_str = command_str.substr(2, first_slash - 2); 
-    std::string new_str = command_str.substr(first_slash + 1, second_slash - first_slash - 1); 
+std::string old_str = command_str.substr(first_slash + 1, second_slash - first_slash - 1);
+std::string new_str;
 
+if (third_slash != std::string::npos) {
+    // 如果有第三个斜杠，说明命令格式是 s/old/new/g
+    new_str = command_str.substr(second_slash + 1, third_slash - second_slash - 1);
+} else {
+    // 如果没有第三个斜杠，说明命令格式是 s/old/new
+    new_str = command_str.substr(second_slash + 1);
+}
+
+
+    // 判断是否全局替换
     bool global_replace = (third_slash != std::string::npos && command_str.substr(third_slash) == "/g");
 
+    // 如果替换的字符串为空
     if (old_str.empty()) {
         display_message("old string cannot be empty");
         return;
     }
 
     int replace_count = 0;
-    for (std::string &line : text) {
-        size_t pos = 0;
-        while ((pos = line.find(old_str, pos)) != std::string::npos) {
-            line.replace(pos, old_str.length(), new_str);
-            replace_count++;
-            pos += (global_replace ? new_str.length() : old_str.length());
+
+    if (global_replace) {
+        // 替换文件中所有行的所有匹配
+        for (std::string &line : text) {
+            size_t pos = 0;
+            while ((pos = line.find(old_str, pos)) != std::string::npos) {
+                line.replace(pos, old_str.length(), new_str);
+                pos += new_str.length(); // 继续查找替换后的字符串之后的位置
+                replace_count++;
+            }
+        }
+    } else {
+        // 只替换当前行的第一个匹配
+        if (y < text.size()) {
+            size_t pos = text[y].find(old_str);
+            if (pos != std::string::npos) {
+                text[y].replace(pos, old_str.length(), new_str);
+                replace_count++;
+            }
         }
     }
 
+    // 显示替换结果
     if (replace_count > 0) {
         display_message("successfully replaced, total replaced in " + std::to_string(replace_count) + " places.");
     } else {
@@ -722,44 +760,93 @@ void MiniVim::toggle_background() {
 }
 
 void MiniVim::change_file(const std::string &filename) {
-    std::ifstream new_file(filename);
-
-    if (!new_file.is_open()) {
-        std::ofstream create_file(filename);
-        if (!create_file.is_open()) {
-            display_message("cannot create file: " + filename);
-            return;
+    if (filename.find("../files/") == 0) {
+        if (filename.find(".txt") != 0)
+        {
+            file_name = filename + ".txt";
         }
-        create_file.close();
-        display_message("file doesn't exists, new file created: " + filename);
-    } else {
-        new_file.close();
+} else {
+    if (filename.find(".txt") != 0)
+        {
+            file_name = filename + ".txt";
+        }
+}
+
+    std::string full_path = filename;
+
+    // 保存当前文件状态
+    if (!current_file.empty()) {
+        save_current_file_context();
     }
 
-    text.clear();
-
-    std::ifstream open_file(filename);
-    std::string line;
-    while (getline(open_file, line)) {
-        text.push_back(line);
-    }
-    open_file.close();
-
-    if (text.empty()) {
-        text.push_back(filename);
+    // 检查是否已经加载过该文件
+    if (file_contexts.find(full_path) != file_contexts.end()) {
+        current_file = full_path;
+        restore_file_context(file_contexts[current_file]);
+        display_message("Switched to file: " + filename);
+        return;
     }
 
-    x = 0;
-    y = 0;
-    view_start_x = 0;
-    view_start_y = 0;
+    // 如果文件未加载，则加载新文件
+    current_file = full_path;
+    FileContext new_context;
+    load_file_into_context(new_context, full_path);
+    file_contexts[current_file] = new_context;
+
+    restore_file_context(file_contexts[current_file]);
+    display_message("Opened new file: " + filename);
+}
+
+void MiniVim::save_current_file_context() {
+    if (current_file.empty()) return; // 没有当前文件，直接返回
+
+    FileContext &context = file_contexts[current_file];
+    context.text = text;
+    context.x = x;
+    context.y = y;
+    context.view_start_x = view_start_x;
+    context.view_start_y = view_start_y;
+    context.undo_stack = undo_stack;
+    context.redo_stack = redo_stack;
+}
+
+void MiniVim::restore_file_context(const FileContext &context) {
+    text = context.text;
+    x = context.x;
+    y = context.y;
+    view_start_x = context.view_start_x;
+    view_start_y = context.view_start_y;
+    undo_stack = context.undo_stack;
+    redo_stack = context.redo_stack;
 
     clear();
     display_text_with_line_numbers();
     display_mode();
     refresh();
+}
 
-    display_message("enter file: " + filename);
+void MiniVim::load_file_into_context(FileContext &context, const std::string &filename) {
+    std::ifstream file(filename);
+    context.text.clear();
+
+    if (file.is_open()) {
+        std::string line;
+        while (getline(file, line)) {
+            context.text.push_back(line);
+        }
+        file.close();
+    } else {
+        // 如果文件不存在，创建空文件
+        std::ofstream create_file(filename);
+        create_file.close();
+        context.text.push_back(filename); // 插入一行空内容
+    }
+
+    // 初始化光标和滚动位置
+    context.x = 0;
+    context.y = 0;
+    context.view_start_x = 0;
+    context.view_start_y = 0;
 }
 
 void MiniVim::set_font_style(int style) {

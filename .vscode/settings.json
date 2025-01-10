@@ -51,6 +51,8 @@
         "ctime": "cpp",
         "ratio": "cpp",
         "iomanip": "cpp",
-        "filesystem": "cpp"
+        "filesystem": "cpp",
+        "csignal": "cpp",
+        "map": "cpp"
     }
 }
