@@ -13,19 +13,19 @@ This project initializes the core functionalities of Vim on a Linux system using
   - undo and redo
   - line numbers and jumping
   - Search and replace
-  - switch through multiple files by command line
+  - switch through multiple files by command line, as well as editing them simultaneously
   - UI improvements: 
     - better color
     - mode display
     - background color change
-    - warnings display
+    - warning messages display
     - words underline
     - font bold
 
 #### Contributions
 
 - **Hongli SHEN**: Basic parts without overflow content, undo and redo, line numbers and jumping, background color, document.
-- **Ximing ZHENG**: bug fixed, overflow content, background color change, search and replace, warning display, switch through multiple files, words underline, font bold.
+- **Ximing ZHENG**: bug fixed, overflow content, background color change, search and replace, warning display, switch through multiple files, simultaneously editing, words underline, font bold.
 
 ## Project structure
 
@@ -118,5 +118,7 @@ we press `:` to enter command line mode when we are in the normal mode.
 - `:+number`: jump the cursor to the specific line at the beginning
 - `:background`: change background color (light and black)
 - `:cd/file_name`: change directory to another file
+- `s/old/new`: replace the first old word in the current line to new words
 - `s/old/new/g`: replace all the old words in the file to new words
+
 
